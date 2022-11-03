@@ -10,9 +10,16 @@ from torchvision.datasets import VOCSegmentation
 
 from model import ResNet18
 
+width, height = (1920, 1080)
+scale = 0.3
+
 
 def to_array(image):
-    return np.array(image.convert('P')) / 255.0
+    image = image.convert('P')
+    image = image.resize((int(width * scale), int(height * scale)))
+    array = np.array(image)
+    array = array / 255.0
+    return array
 
 
 should_download = not os.path.exists('./datasets/VOCdevkit')
