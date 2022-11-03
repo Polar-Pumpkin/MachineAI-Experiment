@@ -10,7 +10,7 @@ from torchsummary import summary
 
 from model import ResNet18
 
-should_download = os.path.exists('./datasets/VOCdevkit')
+should_download = not os.path.exists('./datasets/VOCdevkit')
 train_set = VOCSegmentation('./datasets', image_set='train', download=should_download)
 val_set = VOCSegmentation('./datasets', image_set='val', download=should_download)
 print(f'训练集: {len(train_set)} 张图片')
