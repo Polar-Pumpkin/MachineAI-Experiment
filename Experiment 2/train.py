@@ -1,18 +1,23 @@
-from datetime import datetime
 import os
+from datetime import datetime
 
+import numpy as np
 import torch
 import torch.nn as nn
-from torchvision.datasets import VOCSegmentation
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
-from torchsummary import summary
+from torchvision.datasets import VOCSegmentation
 
 from model import ResNet18
 
+
+def to_array(image):
+    return np.array(image.convert('L')) / 255.0
+
+
 should_download = not os.path.exists('./datasets/VOCdevkit')
-train_set = VOCSegmentation('./datasets', image_set='train', download=should_download)
-val_set = VOCSegmentation('./datasets', image_set='val', download=should_download)
+train_set = VOCSegmentation('./datasets', image_set='train', download=should_download, transform=to_array)
+val_set = VOCSegmentation('./datasets', image_set='val', download=should_download, transform=to_array)
 print(f'训练集: {len(train_set)} 张图片')
 print(f'验证集: {len(val_set)} 张图片')
 
