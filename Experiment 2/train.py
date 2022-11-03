@@ -24,7 +24,7 @@ if __name__ == '__main__':
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     model = net.to(device)
-    summary(model, (3, 2048, 1024))
+    # summary(model, (3, 2048, 1024))
 
     loss_func = nn.CrossEntropyLoss()
     optimizer = torch.optim.SGD(model.parameters(), lr=0.001, momentum=0.9)
