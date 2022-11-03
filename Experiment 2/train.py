@@ -1,4 +1,5 @@
 from datetime import datetime
+import os
 
 import torch
 import torch.nn as nn
@@ -9,8 +10,9 @@ from torchsummary import summary
 
 from model import ResNet18
 
-train_set = VOCSegmentation('./datasets', image_set='train', download=True)
-val_set = VOCSegmentation('./datasets', image_set='val', download=True)
+should_download = os.path.exists('./datasets/VOCdevkit')
+train_set = VOCSegmentation('./datasets', image_set='train', download=should_download)
+val_set = VOCSegmentation('./datasets', image_set='val', download=should_download)
 print(f'训练集: {len(train_set)} 张图片')
 print(f'验证集: {len(val_set)} 张图片')
 
