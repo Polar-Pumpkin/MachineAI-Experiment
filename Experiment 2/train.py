@@ -34,6 +34,7 @@ if __name__ == '__main__':
         for index, data in enumerate(train_loader):
             inputs, labels = data
             optimizer.zero_grad()
+            torch.cuda.empty_cache()
 
             outputs = model(inputs)
             loss = loss_func(outputs, labels)
