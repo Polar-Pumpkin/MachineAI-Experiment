@@ -23,8 +23,10 @@ def to_array(image):
 
 
 should_download = not os.path.exists('./datasets/VOCdevkit')
-train_set = VOCSegmentation('./datasets', image_set='train', download=should_download, transform=to_array)
-val_set = VOCSegmentation('./datasets', image_set='val', download=should_download, transform=to_array)
+train_set = VOCSegmentation('./datasets', image_set='train', download=should_download,
+                            transform=to_array, target_transform=to_array)
+val_set = VOCSegmentation('./datasets', image_set='val', download=should_download,
+                          transform=to_array, target_transform=to_array)
 print(f'训练集: {len(train_set)} 张图片')
 print(f'验证集: {len(val_set)} 张图片')
 
