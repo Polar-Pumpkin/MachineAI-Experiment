@@ -12,7 +12,7 @@ from model import ResNet18
 
 
 def to_array(image):
-    return np.array(image.convert('L')) / 255.0
+    return np.array(image.convert('P')) / 255.0
 
 
 should_download = not os.path.exists('./datasets/VOCdevkit')
