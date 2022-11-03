@@ -1,32 +1,43 @@
 import os
 from datetime import datetime
 
-import numpy as np
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 from torchvision.datasets import VOCSegmentation
+from torchvision.transforms import Compose, Resize, InterpolationMode, Pad, ToTensor
 
 from model import ResNet18
 
-width, height = (1920, 1080)
-scale = 0.3
+width, height = (500, 500)
 
 
-def to_array(image):
-    image = image.convert('P')
-    image = image.resize((int(width * scale), int(height * scale)))
-    array = np.array(image)
-    array = array / 255.0
-    return array
+def augmentation(entry):
+    image, target = entry
+    w, h = image.size
+    if w > h:
+        w, h = width, int(h * (w / width))
+    else:
+        w, h = int(w * (h / height)), height
+
+    source = Compose([
+        Resize((h, w)),
+        Pad((0, 0, max(width - w, 0), max(height - h, 0))),
+        ToTensor()
+    ])
+    label = Compose([
+        Resize((h, w), interpolation=InterpolationMode.NEAREST),
+        Pad((0, 0, max(width - w, 0), max(height - h, 0))),
+        ToTensor()
+    ])
+    return source(image), label(target)
 
 
-should_download = not os.path.exists('./datasets/VOCdevkit')
-train_set = VOCSegmentation('./datasets', image_set='train', download=should_download,
-                            transform=to_array, target_transform=to_array)
-val_set = VOCSegmentation('./datasets', image_set='val', download=should_download,
-                          transform=to_array, target_transform=to_array)
+datasets_root = os.path.join('.', 'datasets')
+exist = os.path.exists(os.path.join(datasets_root, 'VOCdevkit'))
+train_set = VOCSegmentation(datasets_root, image_set='train', download=not exist, transforms=augmentation)
+val_set = VOCSegmentation(datasets_root, image_set='val', download=not exist, transforms=augmentation)
 print(f'训练集: {len(train_set)} 张图片')
 print(f'验证集: {len(val_set)} 张图片')
 
