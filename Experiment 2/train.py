@@ -3,6 +3,7 @@ from datetime import datetime
 
 import torch
 import torch.nn as nn
+from PIL import Image
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 from torchvision.datasets import VOCSegmentation
@@ -13,8 +14,7 @@ from model import ResNet18
 width, height = (500, 500)
 
 
-def augmentation(entry):
-    image, target = entry
+def augmentation(image: Image.Image, target: Image.Image):
     w, h = image.size
     if w > h:
         w, h = width, int(h * (w / width))
