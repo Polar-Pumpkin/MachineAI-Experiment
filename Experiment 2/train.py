@@ -14,8 +14,8 @@ val_set = VOCSegmentation('./datasets', image_set='val', download=True)
 print(f'训练集: {len(train_set)} 张图片')
 print(f'验证集: {len(val_set)} 张图片')
 
-train_loader = DataLoader(train_set, batch_size=64, shuffle=True)
-val_loader = DataLoader(val_set, batch_size=64, shuffle=True)
+train_loader = DataLoader(train_set, batch_size=16, shuffle=True)
+val_loader = DataLoader(val_set, batch_size=16, shuffle=True)
 
 if __name__ == '__main__':
     net = ResNet18(19)
