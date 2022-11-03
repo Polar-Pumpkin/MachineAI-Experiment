@@ -1,13 +1,14 @@
 import os
 from datetime import datetime
 
+import numpy as np
 import torch
 import torch.nn as nn
 from PIL import Image
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 from torchvision.datasets import VOCSegmentation
-from torchvision.transforms import Compose, Resize, InterpolationMode, Pad, ToTensor
+from torchvision.transforms import Compose, Resize, InterpolationMode, Pad, Lambda
 
 from model import ResNet18
 
@@ -24,12 +25,12 @@ def augmentation(image: Image.Image, target: Image.Image):
     source = Compose([
         Resize((h, w)),
         Pad((0, 0, max(width - w, 0), max(height - h, 0))),
-        ToTensor()
+        Lambda(lambda x: np.array(x))
     ])
     label = Compose([
         Resize((h, w), interpolation=InterpolationMode.NEAREST),
         Pad((0, 0, max(width - w, 0), max(height - h, 0))),
-        ToTensor()
+        Lambda(lambda x: np.array(x))
     ])
     return source(image), label(target)
 
