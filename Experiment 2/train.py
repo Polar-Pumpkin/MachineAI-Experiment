@@ -34,6 +34,8 @@ def augmentation(image: Image.Image, target: Image.Image):
     ])
     array = source(image)
     print(array.shape)
+    transformed = np.transpose(array, (2, 0, 1))
+    print(transformed.shape)
     exit()
     return array, label(target)
 
