@@ -63,8 +63,9 @@ if __name__ == '__main__':
         last_loss = 0.0
         for index, data in enumerate(train_loader):
             inputs, labels = data
+            inputs = inputs.to(device)
+
             optimizer.zero_grad()
-            torch.cuda.empty_cache()
 
             outputs = model(inputs)
             loss = loss_func(outputs, labels)
@@ -96,6 +97,8 @@ if __name__ == '__main__':
         running_val_loss = 0.0
         for val_index, val_data in enumerate(val_loader):
             val_inputs, val_labels = val_data
+            val_inputs = val_inputs.to(device)
+
             val_outputs = model(val_inputs)
             val_loss = loss_func(val_outputs, val_labels)
             running_val_loss += val_loss
