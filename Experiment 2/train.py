@@ -25,19 +25,14 @@ def augmentation(image: Image.Image, target: Image.Image):
     source = Compose([
         Resize((h, w)),
         Pad((0, 0, max(width - w, 0), max(height - h, 0))),
-        Lambda(np.array)
+        Lambda(lambda x: np.transpose(np.array(x), (2, 0, 1)))
     ])
     label = Compose([
         Resize((h, w), interpolation=InterpolationMode.NEAREST),
         Pad((0, 0, max(width - w, 0), max(height - h, 0))),
-        Lambda(np.array)
+        Lambda(lambda x: np.transpose(np.array(x), (2, 0, 1)))
     ])
-    array = source(image)
-    print(array.shape)
-    transformed = np.transpose(array, (2, 0, 1))
-    print(transformed.shape)
-    exit()
-    return array, label(target)
+    return source(image), label(target)
 
 
 datasets_root = os.path.join('.', 'datasets')
