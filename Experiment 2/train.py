@@ -70,6 +70,8 @@ if __name__ == '__main__':
             optimizer.zero_grad()
 
             outputs = model(inputs)
+            outputs = outputs.to(device, torch.float)
+
             loss = loss_func(outputs, labels)
             loss.backward()
 
