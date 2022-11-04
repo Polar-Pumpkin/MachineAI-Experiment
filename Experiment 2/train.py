@@ -25,12 +25,12 @@ def augmentation(image: Image.Image, target: Image.Image):
     source = Compose([
         Resize((h, w)),
         Pad((0, 0, max(width - w, 0), max(height - h, 0))),
-        Lambda(lambda x: np.transpose(np.array(x), (0, 3, 1, 2)))
+        Lambda(lambda x: np.transpose(np.array(x), (2, 0, 1)))
     ])
     label = Compose([
         Resize((h, w), interpolation=InterpolationMode.NEAREST),
         Pad((0, 0, max(width - w, 0), max(height - h, 0))),
-        Lambda(lambda x: np.transpose(np.array(x), (0, 3, 1, 2)))
+        Lambda(lambda x: np.transpose(np.array(x), (2, 0, 1)))
     ])
     return source(image), label(target)
 
