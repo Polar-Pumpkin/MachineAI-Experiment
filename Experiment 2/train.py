@@ -9,7 +9,6 @@ from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 from torchvision.datasets import VOCSegmentation
 from torchvision.transforms import Compose, Resize, InterpolationMode, Pad, Lambda
-import cv2
 
 from model import ResNet18
 
