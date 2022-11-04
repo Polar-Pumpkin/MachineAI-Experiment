@@ -9,6 +9,7 @@ from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 from torchvision.datasets import VOCSegmentation
 from torchvision.transforms import Compose, Resize, InterpolationMode, Pad, Lambda
+import cv2
 
 from model import ResNet18
 
@@ -25,14 +26,17 @@ def augmentation(image: Image.Image, target: Image.Image):
     source = Compose([
         Resize((h, w)),
         Pad((0, 0, max(width - w, 0), max(height - h, 0))),
-        Lambda(lambda x: np.transpose(np.array(x), (2, 0, 1)))
+        Lambda(np.array)
     ])
     label = Compose([
         Resize((h, w), interpolation=InterpolationMode.NEAREST),
         Pad((0, 0, max(width - w, 0), max(height - h, 0))),
-        Lambda(lambda x: np.transpose(np.array(x), (2, 0, 1)))
+        Lambda(np.array)
     ])
-    return source(image), label(target)
+    array = source(image)
+    print(array.shape)
+    exit()
+    return array, label(target)
 
 
 datasets_root = os.path.join('.', 'datasets')
