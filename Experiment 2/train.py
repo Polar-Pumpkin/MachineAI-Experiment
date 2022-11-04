@@ -1,38 +1,41 @@
 import os
 from datetime import datetime
 
+import cv2
 import numpy as np
 import torch
 import torch.nn as nn
-from PIL import Image
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 from torchvision.datasets import VOCSegmentation
-from torchvision.transforms import Compose, Resize, InterpolationMode, Pad, Lambda
 
 from model import ResNet18
 
 width, height = (500, 500)
 
 
-def augmentation(image: Image.Image, target: Image.Image):
+def augmentation(image, target):
     w, h = image.size
     if w > h:
         w, h = width, int(h * (w / width))
     else:
         w, h = int(w * (h / height)), height
 
-    source = Compose([
-        Resize((h, w)),
-        Pad((0, 0, max(width - w, 0), max(height - h, 0))),
-        Lambda(lambda x: np.transpose(np.array(x), (2, 0, 1)))
-    ])
-    label = Compose([
-        Resize((h, w), interpolation=InterpolationMode.NEAREST),
-        Pad((0, 0, max(width - w, 0), max(height - h, 0))),
-        Lambda(lambda x: np.transpose(np.array(x), (2, 0, 1)))
-    ])
-    return source(image), label(target)
+    top = 0
+    bottom = max(height - h, 0)
+    left = 0
+    right = max(width - w, 0)
+
+    image = np.array(image)
+    image = cv2.resize(image, (w, h))
+    image = cv2.copyMakeBorder(image, top, bottom, left, right, cv2.BORDER_CONSTANT, value=[0, 0, 0])
+    image = np.transpose(image, (2, 0, 1))
+
+    target = np.array(target)
+    target = cv2.resize(target, (w, h), interpolation=cv2.INTER_NEAREST)
+    target = cv2.copyMakeBorder(target, top, bottom, left, right, cv2.BORDER_CONSTANT, value=[0, 0, 0])
+    target = np.transpose(target, (2, 0, 1))
+    return image, target
 
 
 datasets_root = os.path.join('.', 'datasets')
