@@ -56,7 +56,7 @@ class ResNet18(nn.Module):
                                     BasicBlock(256, 256, 1))
         self.stage4 = nn.Sequential(DownsampleBlock(256, 512, [2, 1]),
                                     BasicBlock(512, 512, 1))
-        self.upsample = nn.UpsamplingBilinear2d(scale_factor=16)
+        # self.upsample = nn.UpsamplingBilinear2d(scale_factor=16)
         self.dot = nn.Conv2d(512, num_classes, kernel_size=1)
 
     def forward(self, x):
@@ -65,13 +65,13 @@ class ResNet18(nn.Module):
         output = self.stage2(output)
         output = self.stage3(output)
         output = self.stage4(output)
-        output = self.upsample(output)
+        # output = self.upsample(output)
         output = self.dot(output)
         return output
 
 
 if __name__ == '__main__':
-    net = ResNet18(19)
-    X = torch.rand(1, 3, 2048, 1024)
+    net = ResNet18(20)
+    X = torch.rand(1, 3, 512, 512)
     y = net(X)
     print(y.shape)

@@ -11,7 +11,7 @@ from torchvision.datasets import VOCSegmentation
 
 from model import ResNet18
 
-width, height = (500, 500)
+width, height = (512, 512)
 
 
 def augmentation(image, target):
@@ -50,7 +50,7 @@ train_loader = DataLoader(train_set, batch_size=16, shuffle=True)
 val_loader = DataLoader(val_set, batch_size=16, shuffle=True)
 
 if __name__ == '__main__':
-    net = ResNet18(19)
+    net = ResNet18(20)
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     model = net.to(device)
