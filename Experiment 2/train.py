@@ -65,7 +65,7 @@ if __name__ == '__main__':
         last_loss = 0.0
         for index, data in enumerate(train_loader):
             inputs, labels = data
-            inputs = inputs.to(device)
+            inputs = inputs.to(device, torch.float)
 
             optimizer.zero_grad()
 
@@ -99,7 +99,7 @@ if __name__ == '__main__':
         running_val_loss = 0.0
         for val_index, val_data in enumerate(val_loader):
             val_inputs, val_labels = val_data
-            val_inputs = val_inputs.to(device)
+            val_inputs = val_inputs.to(device, torch.float)
 
             val_outputs = model(val_inputs)
             val_loss = loss_func(val_outputs, val_labels)
