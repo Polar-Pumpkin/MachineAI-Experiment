@@ -30,10 +30,12 @@ def augmentation(image, target):
     image = cv2.resize(image, (w, h))
     image = cv2.copyMakeBorder(image, top, bottom, left, right, cv2.BORDER_CONSTANT, value=[0, 0, 0])
     image = np.transpose(image, (2, 0, 1))
+    image = image / 255.0
 
     target = np.array(target)
     target = cv2.resize(target, (w, h), interpolation=cv2.INTER_NEAREST)
     target = cv2.copyMakeBorder(target, top, bottom, left, right, cv2.BORDER_CONSTANT, value=[0, 0, 0])
+    target = target / 255.0
     return image, target
 
 
