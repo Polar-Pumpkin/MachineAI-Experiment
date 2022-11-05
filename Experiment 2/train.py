@@ -66,6 +66,7 @@ if __name__ == '__main__':
         for index, data in enumerate(train_loader):
             inputs, labels = data
             inputs = inputs.to(device, torch.float)
+            labels = labels.to(device, torch.float)
 
             optimizer.zero_grad()
 
