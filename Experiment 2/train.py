@@ -103,8 +103,11 @@ if __name__ == '__main__':
         for val_index, val_data in enumerate(val_loader):
             val_inputs, val_labels = val_data
             val_inputs = val_inputs.to(device, torch.float)
+            val_labels = val_labels.to(device, torch.float)
 
             val_outputs = model(val_inputs)
+            val_outputs = val_outputs.to(device, torch.float)
+
             val_loss = loss_func(val_outputs, val_labels)
             running_val_loss += val_loss
 
