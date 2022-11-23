@@ -1,17 +1,22 @@
 import os
+from datetime import datetime
 
 import cv2
 import numpy as np
 import torch
-import torch.nn as nn
+import torch.cuda as cuda
 import torch.distributed as distributed
-from torch.nn import functional
-from torch.nn.parallel import DistributedDataParallel
+import torch.nn as nn
+import torch.optim as optim
+from torch.backends import cudnn
 from torch.utils.data import DataLoader
+from torch.utils.data.distributed import DistributedSampler
 from torchvision.datasets import VOCSegmentation
 
 from model import ResNet18
-from util.evaluate import evaluate
+from util.losses import LossHistory
+from util.train import get_lr_scheduler
+from util.train import one_epoch
 
 width, height = (512, 512)
 
@@ -41,89 +46,190 @@ def augmentation(image, target):
     return image, target
 
 
+def collate(batch):
+    images = []
+    pngs = []
+    seg_labels = []
+    for img, png, labels in batch:
+        images.append(img)
+        pngs.append(png)
+        seg_labels.append(labels)
+    images = torch.from_numpy(np.array(images)).type(torch.FloatTensor)
+    pngs = torch.from_numpy(np.array(pngs)).long()
+    seg_labels = torch.from_numpy(np.array(seg_labels)).type(torch.FloatTensor)
+    return images, pngs, seg_labels
+
+
 datasets_root = os.path.join('.', 'datasets')
 exist = os.path.exists(os.path.join(datasets_root, 'VOCdevkit'))
 train_set = VOCSegmentation(datasets_root, image_set='train', download=not exist, transforms=augmentation)
-val_set = VOCSegmentation(datasets_root, image_set='val', download=not exist, transforms=augmentation)
-print(f'训练集: {len(train_set)} 张图片')
-print(f'验证集: {len(val_set)} 张图片')
-
-train_loader = DataLoader(train_set, batch_size=16, shuffle=True)
-val_loader = DataLoader(val_set, batch_size=16, shuffle=True)
+train_size = len(train_set)
+validate_set = VOCSegmentation(datasets_root, image_set='val', download=not exist, transforms=augmentation)
+validate_size = len(validate_set)
+print(f'训练集: {train_size} 张图片')
+print(f'验证集: {validate_size} 张图片')
 
 if __name__ == '__main__':
-    net = ResNet18(21)
+    # 使用 Cuda
+    use_cuda = cuda.is_available()
+    # 使用分布式运行 (单机多卡)
+    use_distributed = False
+    # 全局梯度同步 (用于 DDP)
+    sync_bn = False
+    # 混合精度训练, 可减少约一半的显存 (需要 PyTorch 1.7.1+)
+    use_fp16 = True
+    # 分类数量
+    num_classes = 21
+    # 输入图片大小
+    input_shape = (512, 512)
+    # 学习率与学习率下降
+    lr_init = 7e-3
+    lr_min = lr_init * 0.01
+    lr_decay_type = 'cos'
+    # 优化器与优化器参数
+    optimizer_type = 'sgd'
+    momentum = 0.9
+    weight_decay = 1e-4
+    # 损失函数
+    use_dice_loss = False
+    use_focal_loss = False
+    # 使用多线程读取数据
+    num_workers = 4
+    #
+    epoch_from = 0
+    epoch_freeze = 0
+    epoch_unfreeze = 50
+    batch_size_freeze = 8
+    batch_size_unfreeze = 4
+    freeze_train = False
+    #
+    eval_period = 5
+    #
+    class_weights = np.ones([num_classes], np.float32)
+    #
+    save_period = 5
+    save_path = './runs'
 
-    os.environ['MASTER_ADDR'] = 'localhost'
-    os.environ['MASTER_PORT'] = '25565'
+    ngpus_per_node = cuda.device_count()
+    if use_cuda and use_distributed:
+        distributed.init_process_group(backend='nccl')
+        local_rank = int(os.environ['LOCAL_RANK'])
+        rank = int(os.environ['RANK'])
+        device = torch.device('cuda', local_rank)
+        if local_rank == 0:
+            print(f'[{os.getpid()}] (rank = {rank}, local_rank = {local_rank}) training...')
+            print('GPU 设备数量:', ngpus_per_node)
+    else:
+        device = torch.device('cuda' if use_cuda and cuda.is_available() else 'cpu')
+        local_rank = 0
 
-    amount = torch.cuda.device_count()
-    distributed.init_process_group(backend="nccl", rank=0, world_size=amount)
-    # device_ids will include all GPU devices by default
-    model = DistributedDataParallel(net.cuda())
+    model = ResNet18(num_classes)
 
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    # model = net.to(device)
-    # summary(model, (3, 2048, 1024))
+    if local_rank == 0:
+        logs_path = os.path.join(save_path, f"loss_{datetime.strftime(datetime.now(), '%Y_%m_%d_%h_%M_%S')}")
+        history = LossHistory(logs_path, model, input_shape)
+    else:
+        history = None
 
-    loss_func = nn.CrossEntropyLoss()
-    optimizer = torch.optim.SGD(model.parameters(), lr=0.001, momentum=0.9)
+    if use_fp16:
+        from torch.cuda.amp import GradScaler as GradScaler
 
-    epoch = 15
-    best_score = 0.0
-    for epoch_index in range(epoch):
-        model.train()
-        train_loss = 0.0
+        scaler = GradScaler
+    else:
+        scaler = None
 
-        train_truth = torch.LongTensor()
-        train_predict = torch.LongTensor()
-        for batch_index, batch in enumerate(train_loader):
-            inputs, labels = map(lambda x: x.to(device=device, dtype=torch.float), batch)
+    model_train = model.train()
+    if sync_bn and use_cuda and use_distributed and ngpus_per_node > 1:
+        model_train = nn.SyncBatchNorm.convert_sync_batchnorm(model_train)
+    elif sync_bn:
+        print('无法在单 GPU 设备或非分布式训练的情况下全局同步梯度')
 
-            outputs = functional.log_softmax(model(inputs), dim=1)
-            loss = loss_func(outputs, labels)
+    if use_cuda:
+        if use_distributed:
+            model_train = model_train.cuda(local_rank)
+            model_train = nn.parallel.DistributedDataParallel(model_train,
+                                                              device_ids=[local_rank],
+                                                              find_unused_parameters=True)
+        else:
+            model_train = nn.DataParallel(model)
+            cudnn.benchmark = True
+            model_train = model_train.cuda()
 
-            truth = labels.data.cpu()
-            predict = outputs.argmax(dim=1).squeeze().data.cpu()
+    if local_rank == 0:
+        # TODO 显示配置文件
+        step_wanted = 1.5e4 if optimizer_type == 'sgd' else 0.5e4
+        step_total = train_size // batch_size_unfreeze * epoch_unfreeze
+        if step_total <= step_wanted:
+            if train_size // batch_size_unfreeze == 0:
+                raise ValueError('无法进行训练: 数据集过小, 请扩充数据集')
+            epoch_wanted = step_wanted // (train_size // batch_size_unfreeze) + 1
+            print('使用 %s 优化器时, 建议将训练总步长设置到 %d 以上' % (optimizer_type, step_wanted))
+            print('本次运行的总训练数据量为 %d, 解冻训练的批大小为 %d, 共训练 %d 轮, 计算出总训练步长为 %d' % (
+                train_size, batch_size_unfreeze, epoch_unfreeze, step_total))
+            print(
+                '由于总训练步长为 %d, 小于建议总步长 %d, 建议设置总轮数为 %d' % (step_total, step_wanted, epoch_wanted))
 
-            optimizer.zero_grad()
-            loss.backward()
-            optimizer.step()
+    is_unfreezed = False
+    if freeze_train:
+        raise NotImplementedError('未实现冻结训练')
 
-            train_loss += loss.cpu().item() * labels.size(0)
-            train_truth = torch.cat((train_truth, truth), dim=0)
-            train_predict = torch.cat((train_predict, predict), dim=0)
+    batch_size = batch_size_freeze if freeze_train else batch_size_unfreeze
+    nbs = 16
+    lr_limit_max = 5e-4 if optimizer_type == 'adam' else 1e-1
+    lr_limit_min = 3e-4 if optimizer_type == 'adam' else 5e-4
+    lr_init_fit = min(max(batch_size / nbs * lr_init, lr_limit_min), lr_limit_max)
+    lr_min_fit = min(max(batch_size / nbs * lr_min, lr_limit_min * 1e-2), lr_limit_max * 1e-2)
+    lr_scheduler_func = get_lr_scheduler(lr_decay_type, lr_init_fit, lr_min_fit, epoch_unfreeze)
 
-        train_loss /= len(train_set)
-        acc, acc_cls, mean_iu, fwavacc = evaluate(train_truth.numpy(), train_predict.numpy(), 21)
-        print('\nepoch:{}, train_loss:{:.4f}, acc:{:.4f}, acc_cls:{:.4f}, mean_iu:{:.4f}, fwavacc:{:.4f}'
-              .format(epoch_index + 1, train_loss, acc, acc_cls, mean_iu, fwavacc))
+    optimizers = {
+        'adam': optim.Adam(model.parameters(), lr_init_fit, betas=(momentum, 0.999), weight_decay=weight_decay),
+        'sgd': optim.SGD(model.parameters(), lr_init_fit, momentum=momentum, nesterov=True, weight_decay=weight_decay)
+    }
+    optimizer = optimizers[optimizer_type]
 
-        model.eval()
-        validate_loss = 0.0
+    epoch_step = train_size // batch_size
+    epoch_step_validate = validate_size // batch_size
+    if epoch_step == 0 or epoch_step_validate == 0:
+        raise ValueError('无法进行训练: 数据集过小, 请扩充数据集')
 
-        validate_truth = torch.LongTensor()
-        validate_predict = torch.LongTensor()
-        with torch.no_grad():
-            for batch_index, batch in enumerate(val_loader):
-                inputs, labels = map(lambda x: x.to(device=device, dtype=torch.float), batch)
+    if use_cuda and use_distributed:
+        train_sampler = DistributedSampler(train_set, shuffle=True)
+        validate_sampler = DistributedSampler(validate_set, shuffle=False)
+        batch_size = batch_size // ngpus_per_node
+        shuffle = False
+    else:
+        train_sampler = None
+        validate_sampler = None
+        shuffle = True
 
-                outputs = functional.log_softmax(model(inputs), dim=1)
-                loss = loss_func(outputs, labels)
+    train_loader = DataLoader(train_set, shuffle=shuffle, batch_size=batch_size, num_workers=num_workers,
+                              pin_memory=True, drop_last=True, collate_fn=collate, sampler=train_sampler)
+    validate_loader = DataLoader(validate_set, shuffle=shuffle, batch_size=batch_size, num_workers=num_workers,
+                                 pin_memory=True, drop_last=True, collate_fn=collate, sampler=validate_sampler)
 
-                truth = labels.data.cpu()
-                predict = outputs.argmax(dim=1).squeeze().data.cpu()
+    if local_rank == 0:
+        eval_callback = None
+    else:
+        eval_callback = None
 
-                validate_loss += loss.cpu().item() * labels.size(0)
-                validate_truth = torch.cat((validate_truth, truth), dim=0)
-                validate_predict = torch.cat((validate_predict, predict), dim=0)
+    for epoch in range(epoch_from, epoch_unfreeze):
+        if epoch >= epoch_freeze and freeze_train and not is_unfreezed:
+            # TODO 代码复用
+            pass
 
-            validate_loss /= len(val_set)
-            acc, acc_cls, mean_iu, fwavacc = evaluate(validate_truth.numpy(), validate_predict.numpy(), 21)
-            print('\nepoch:{}, validate_loss:{:.4f}, acc:{:.4f}, acc_cls:{:.4f}, mean_iu:{:.4f}, fwavacc:{:.4f}'
-                  .format(epoch_index + 1, validate_loss, acc, acc_cls, mean_iu, fwavacc))
+        if use_cuda and use_distributed:
+            train_sampler.set_epoch(epoch)
 
-        score = (acc_cls + mean_iu) / 2
-        if score > best_score:
-            best_score = score
-            torch.save(model.state_dict(), './runs/best_result.pth')
+        lr = lr_scheduler_func(epoch)
+        for param_group in optimizer.param_groups:
+            param_group['lr'] = lr
+
+        one_epoch(epoch, epoch_unfreeze, model_train, model, optimizer, num_classes, class_weights, scaler,
+                  train_loader, validate_loader, epoch_step, epoch_step_validate,
+                  use_cuda, use_fp16, use_dice_loss, use_focal_loss, history, save_period, save_path, local_rank)
+
+        if use_cuda and use_distributed:
+            distributed.barrier()
+
+    if local_rank == 0:
+        history.writer.close()

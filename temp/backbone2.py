@@ -262,37 +262,40 @@ class HighResolutionModule(nn.Module):
 
 
 class DenseConnectionBlock(nn.Module):
+    direct = False
+
     def __init__(self, modules, channel: int):
         super(DenseConnectionBlock, self).__init__()
         self.modules = modules
         for idx, module in enumerate(modules):
             self.add_module(str(idx), module)
 
-        # offset = len(modules)
-        # self.transformers = []
-        # for index in range(2, len(modules)):
-        #     module = nn.Conv2d(index * channel, channel, kernel_size=1, stride=1)
-        #     self.transformers.append(module)
-        #     self.add_module(str(index - 2 + offset), module)
+        if not self.direct:
+            offset = len(modules)
+            self.transformers = []
+            for index in range(2, len(modules)):
+                module = nn.Conv2d(index * channel, channel, kernel_size=1, stride=1)
+                self.transformers.append(module)
+                self.add_module(str(index - 2 + offset), module)
 
     def forward(self, x):
         outputs = []
-        for index in range(len(self.modules)):
-            cursor = self.modules[index]
-
+        for index, cursor in enumerate(self.modules):
             inputs = None
             for output in outputs:
                 if inputs is None:
-                    inputs = output
+                    inputs = output.clone()
                 else:
-                    inputs = inputs + output
-                    # inputs = np.concatenate((inputs, output), axis=1)
+                    if self.direct:
+                        inputs = inputs + output
+                    else:
+                        inputs = torch.cat((inputs, output), dim=1)
 
             if inputs is None:
                 inputs = x
 
-            # if index >= 2:
-            #     inputs = self.transformers[index - 2](inputs)
+            if not self.direct and index >= 2:
+                inputs = self.transformers[index - 2](inputs)
             outputs.append(cursor(inputs))
         return outputs[-1]
 
