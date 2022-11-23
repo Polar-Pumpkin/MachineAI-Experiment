@@ -50,7 +50,7 @@ train_loader = DataLoader(train_set, batch_size=16, shuffle=True)
 val_loader = DataLoader(val_set, batch_size=16, shuffle=True)
 
 if __name__ == '__main__':
-    net = ResNet18(20)
+    net = ResNet18(21)
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     model = net.to(device)
