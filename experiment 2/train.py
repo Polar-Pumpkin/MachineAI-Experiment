@@ -68,7 +68,7 @@ if __name__ == '__main__':
         train_truth = torch.LongTensor()
         train_predict = torch.LongTensor()
         for batch_index, batch in enumerate(train_loader):
-            map(lambda x: x.to(device), batch)
+            map(lambda x: x.to(device=device, dtype=torch.float), batch)
             inputs, labels = batch
 
             outputs = functional.log_softmax(model(inputs), dim=1)
@@ -97,7 +97,7 @@ if __name__ == '__main__':
         validate_predict = torch.LongTensor()
         with torch.no_grad():
             for batch_index, batch in enumerate(val_loader):
-                map(lambda x: x.to(device), batch)
+                map(lambda x: x.to(device=device, dtype=torch.float), batch)
                 inputs, labels = batch
 
                 outputs = functional.log_softmax(model(inputs), dim=1)
