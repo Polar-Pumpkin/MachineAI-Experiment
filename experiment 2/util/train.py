@@ -10,9 +10,9 @@ from torch.cuda.amp import GradScaler
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
-import losses
-import metrics
-from losses import LossHistory
+from . import losses
+from . import metrics
+from .losses import LossHistory
 
 
 def yolox_warm_cos_lr(lr, min_lr, total_iters, warmup_total_iters, warmup_lr_start, no_aug_iter, iters):
