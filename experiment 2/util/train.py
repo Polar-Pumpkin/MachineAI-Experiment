@@ -10,7 +10,7 @@ from torch.cuda.amp import GradScaler
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
-import losses as losses
+import losses
 import metrics
 from losses import LossHistory
 
