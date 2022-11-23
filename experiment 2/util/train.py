@@ -2,6 +2,7 @@ import math
 import os
 from functools import partial
 
+from typing import Union
 import numpy as np
 import torch
 import torch.nn as nn
@@ -55,7 +56,7 @@ def get_lr(optimizer):
 
 
 def one_epoch(epoch: int, epoch_max: int, model: nn.Module, net: nn.Module, optimizer: optim.Optimizer,
-              num_classes: int, class_weights: np.ndarray, scaler: GradScaler | None,
+              num_classes: int, class_weights: np.ndarray, scaler: Union[GradScaler, None],
               train_loader: DataLoader, validate_loader: DataLoader, length_train: int, length_validate: int,
               use_cuda: bool, use_fp16: bool, use_dice_loss: bool, use_focal_loss: bool,
               history: LossHistory,
@@ -111,7 +112,7 @@ def one_epoch(epoch: int, epoch_max: int, model: nn.Module, net: nn.Module, opti
                         loss, f_score = forward()
 
                 if not is_validation:
-                    if use_fp16:
+                    if use_fp16 and scaler is not None:
                         scaler.scale(loss).backward()
                         scaler.step(optimizer)
                         scaler.update()
