@@ -285,7 +285,7 @@ class DenseConnectionBlock(nn.Module):
                 if inputs is None:
                     inputs = output
                 else:
-                    inputs += output
+                    inputs = inputs + output
                     # inputs = np.concatenate((inputs, output), axis=1)
 
             if inputs is None:
