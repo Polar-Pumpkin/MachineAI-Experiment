@@ -54,7 +54,8 @@ val_loader = DataLoader(val_set, batch_size=16, shuffle=True)
 if __name__ == '__main__':
     net = ResNet18(21)
 
-    distributed.init_process_group(backend="nccl")
+    amount = torch.cuda.device_count()
+    distributed.init_process_group(backend="nccl", rank=0, world_size=amount)
     # device_ids will include all GPU devices by default
     model = DistributedDataParallel(net.cuda())
 
