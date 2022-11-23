@@ -4,7 +4,9 @@ import cv2
 import numpy as np
 import torch
 import torch.nn as nn
+import torch.distributed as distributed
 from torch.nn import functional
+from torch.nn.parallel import DistributedDataParallel
 from torch.utils.data import DataLoader
 from torchvision.datasets import VOCSegmentation
 
@@ -52,11 +54,15 @@ val_loader = DataLoader(val_set, batch_size=16, shuffle=True)
 if __name__ == '__main__':
     net = ResNet18(21)
 
+    distributed.init_process_group(backend="nccl")
+    # device_ids will include all GPU devices by default
+    model = DistributedDataParallel(net.cuda())
+
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    model = net.to(device)
+    # model = net.to(device)
     # summary(model, (3, 2048, 1024))
 
-    loss_func = nn.CrossEntropyLoss().to(device)
+    loss_func = nn.CrossEntropyLoss()
     optimizer = torch.optim.SGD(model.parameters(), lr=0.001, momentum=0.9)
 
     epoch = 15
