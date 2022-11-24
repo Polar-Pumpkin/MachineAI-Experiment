@@ -43,7 +43,7 @@ class DownsampleBlock(nn.Module):
 
 
 class ResNet18(nn.Module):
-    def __init__(self, num_classes):
+    def __init__(self, num_classes: int):
         super(ResNet18, self).__init__()
         self.conv1 = nn.Conv2d(3, 64, kernel_size=7, stride=2, padding=3)
         self.bn1 = nn.BatchNorm2d(64)
@@ -60,6 +60,9 @@ class ResNet18(nn.Module):
         self.dot = nn.Conv2d(512, num_classes, kernel_size=1)
 
     def forward(self, x):
+        print('Forward to', type(x))
+        if isinstance(x, torch.Tensor):
+            print('Require grad:', x.requires_grad, ',', 'Grad fn:', x.grad_fn)
         output = self.conv1(x)
         output = self.stage1(output)
         output = self.stage2(output)
@@ -67,6 +70,8 @@ class ResNet18(nn.Module):
         output = self.stage4(output)
         output = self.upsample(output)
         output = self.dot(output)
+        if isinstance(output, torch.Tensor):
+            print('Require grad:', output.requires_grad, ',', 'Grad fn:', output.grad_fn)
         return output
 
 
