@@ -18,7 +18,46 @@ from util.losses import LossHistory
 from util.train import get_lr_scheduler
 from util.train import one_epoch
 
-width, height = (512, 512)
+# 使用 Cuda
+use_cuda = cuda.is_available()
+# 使用分布式运行 (单机多卡)
+use_distributed = False
+# 全局梯度同步 (用于 DDP)
+sync_bn = False
+# 混合精度训练, 可减少约一半的显存 (需要 PyTorch 1.7.1+)
+use_fp16 = True
+# 分类数量
+num_classes = 21
+# 输入图片大小
+input_shape = (512, 512)
+width, height = input_shape
+# 学习率与学习率下降
+lr_init = 7e-3
+lr_min = lr_init * 0.01
+lr_decay_type = 'cos'
+# 优化器与优化器参数
+optimizer_type = 'sgd'
+momentum = 0.9
+weight_decay = 1e-4
+# 损失函数
+use_dice_loss = False
+use_focal_loss = False
+# 使用多线程读取数据
+num_workers = 4
+#
+epoch_from = 0
+epoch_freeze = 0
+epoch_unfreeze = 50
+batch_size_freeze = 8
+batch_size_unfreeze = 4
+freeze_train = False
+#
+eval_period = 5
+#
+class_weights = np.ones([num_classes], np.float32)
+#
+save_period = 5
+save_path = './runs'
 
 
 def augmentation(image, target):
@@ -43,7 +82,10 @@ def augmentation(image, target):
     target = cv2.resize(target, (w, h), interpolation=cv2.INTER_NEAREST)
     target = cv2.copyMakeBorder(target, top, bottom, left, right, cv2.BORDER_CONSTANT, value=[0, 0, 0])
     target = target / 255.0
-    return image, target
+
+    labels = np.eye(num_classes + 1)[target.reshape([-1])]
+    labels = labels.reshape((width, height, num_classes + 1))
+    return image, target, labels
 
 
 def collate(batch):
@@ -70,46 +112,6 @@ print(f'训练集: {train_size} 张图片')
 print(f'验证集: {validate_size} 张图片')
 
 if __name__ == '__main__':
-    # 使用 Cuda
-    use_cuda = cuda.is_available()
-    # 使用分布式运行 (单机多卡)
-    use_distributed = False
-    # 全局梯度同步 (用于 DDP)
-    sync_bn = False
-    # 混合精度训练, 可减少约一半的显存 (需要 PyTorch 1.7.1+)
-    use_fp16 = True
-    # 分类数量
-    num_classes = 21
-    # 输入图片大小
-    input_shape = (512, 512)
-    # 学习率与学习率下降
-    lr_init = 7e-3
-    lr_min = lr_init * 0.01
-    lr_decay_type = 'cos'
-    # 优化器与优化器参数
-    optimizer_type = 'sgd'
-    momentum = 0.9
-    weight_decay = 1e-4
-    # 损失函数
-    use_dice_loss = False
-    use_focal_loss = False
-    # 使用多线程读取数据
-    num_workers = 4
-    #
-    epoch_from = 0
-    epoch_freeze = 0
-    epoch_unfreeze = 50
-    batch_size_freeze = 8
-    batch_size_unfreeze = 4
-    freeze_train = False
-    #
-    eval_period = 5
-    #
-    class_weights = np.ones([num_classes], np.float32)
-    #
-    save_period = 5
-    save_path = './runs'
-
     ngpus_per_node = cuda.device_count()
     if use_cuda and use_distributed:
         distributed.init_process_group(backend='nccl')
