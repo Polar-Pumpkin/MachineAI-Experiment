@@ -47,7 +47,7 @@ num_workers = 4
 #
 epoch_from = 0
 epoch_freeze = 0
-epoch_unfreeze = 50
+epoch_max = 50
 batch_size_freeze = 8
 batch_size_unfreeze = 4
 freeze_train = False
@@ -166,14 +166,14 @@ if __name__ == '__main__':
     if local_rank == 0:
         # TODO 显示配置文件
         step_wanted = 1.5e4 if optimizer_type == 'sgd' else 0.5e4
-        step_total = train_size // batch_size_unfreeze * epoch_unfreeze
+        step_total = train_size // batch_size_unfreeze * epoch_max
         if step_total <= step_wanted:
             if train_size // batch_size_unfreeze == 0:
                 raise ValueError('无法进行训练: 数据集过小, 请扩充数据集')
             epoch_wanted = step_wanted // (train_size // batch_size_unfreeze) + 1
             print('使用 %s 优化器时, 建议将训练总步长设置到 %d 以上' % (optimizer_type, step_wanted))
             print('本次运行的总训练数据量为 %d, 解冻训练的批大小为 %d, 共训练 %d 轮, 计算出总训练步长为 %d' % (
-                train_size, batch_size_unfreeze, epoch_unfreeze, step_total))
+                train_size, batch_size_unfreeze, epoch_max, step_total))
             print(
                 '由于总训练步长为 %d, 小于建议总步长 %d, 建议设置总轮数为 %d' % (step_total, step_wanted, epoch_wanted))
 
@@ -188,7 +188,7 @@ if __name__ == '__main__':
     lr_limit_min = 3e-4 if optimizer_type == 'adam' else 5e-4
     lr_init_fit = min(max(batch_size / nbs * lr_init, lr_limit_min), lr_limit_max)
     lr_min_fit = min(max(batch_size / nbs * lr_min, lr_limit_min * 1e-2), lr_limit_max * 1e-2)
-    lr_scheduler_func = get_lr_scheduler(lr_decay_type, lr_init_fit, lr_min_fit, epoch_unfreeze)
+    lr_scheduler_func = get_lr_scheduler(lr_decay_type, lr_init_fit, lr_min_fit, epoch_max)
 
     optimizers = {
         'adam': optim.Adam(model.parameters(), lr_init_fit, betas=(momentum, 0.999), weight_decay=weight_decay),
@@ -221,7 +221,7 @@ if __name__ == '__main__':
     else:
         eval_callback = None
 
-    for epoch in range(epoch_from, epoch_unfreeze):
+    for epoch in range(epoch_from, epoch_max):
         if epoch >= epoch_freeze and not is_unfreezed:
             # TODO 代码复用 (重新设置超参数)
             for param in model.parameters():
@@ -235,7 +235,7 @@ if __name__ == '__main__':
         for param_group in optimizer.param_groups:
             param_group['lr'] = lr
 
-        one_epoch(epoch, epoch_unfreeze, model_train, model, optimizer, num_classes, class_weights, scaler,
+        one_epoch(epoch, epoch_max, model_train, model, optimizer, num_classes, class_weights, scaler,
                   train_loader, validate_loader, epoch_step, epoch_step_validate,
                   use_cuda, use_fp16, use_dice_loss, use_focal_loss, history, save_period, save_path, local_rank)
 
