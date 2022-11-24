@@ -72,7 +72,7 @@ def augmentation(image, target):
     left = 0
     right = max(width - w, 0)
 
-    image = np.array(image)
+    image = np.array(image, np.float64)
     image = cv2.resize(image, (w, h))
     image = cv2.copyMakeBorder(image, top, bottom, left, right, cv2.BORDER_CONSTANT, value=[0, 0, 0])
     image = np.transpose(image, (2, 0, 1))
@@ -81,7 +81,7 @@ def augmentation(image, target):
     target = np.array(target)
     target = cv2.resize(target, (w, h), interpolation=cv2.INTER_NEAREST)
     target = cv2.copyMakeBorder(target, top, bottom, left, right, cv2.BORDER_CONSTANT, value=[0, 0, 0])
-    target = target / 255.0
+    # target = target / 255.0
 
     labels = np.eye(num_classes + 1)[target.reshape([-1])]
     labels = labels.reshape((width, height, num_classes + 1))
