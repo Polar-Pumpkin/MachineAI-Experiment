@@ -82,25 +82,30 @@ def augmentation(image, target):
     target = cv2.resize(target, (w, h), interpolation=cv2.INTER_NEAREST)
     target = cv2.copyMakeBorder(target, top, bottom, left, right, cv2.BORDER_CONSTANT, value=[0, 0, 0])
     # target = target / 255.0
-    target[target >= num_classes] = num_classes
+    # target[target >= num_classes] = num_classes
 
-    labels = np.eye(num_classes + 1)[target.reshape([-1])]
-    labels = labels.reshape((width, height, num_classes + 1))
-    return image, target, labels
+    # labels = np.eye(num_classes + 1)[target.reshape([-1])]
+    # labels = labels.reshape((width, height, num_classes + 1))
+    return image, target
 
 
 def collate(batch):
-    images = []
+    imgs = []
     pngs = []
-    seg_labels = []
-    for img, png, labels in batch:
-        images.append(img)
+    labels = []
+    for img, png in batch:
+        imgs.append(img)
+
+        png[png >= num_classes] = num_classes
         pngs.append(png)
-        seg_labels.append(labels)
-    images = torch.from_numpy(np.array(images)).type(torch.FloatTensor)
+
+        label = np.eye(num_classes + 1)[png.reshape([-1])]
+        label = label.reshape((width, height, num_classes + 1))
+        labels.append(label)
+    imgs = torch.from_numpy(np.array(imgs)).type(torch.FloatTensor)
     pngs = torch.from_numpy(np.array(pngs)).long()
-    seg_labels = torch.from_numpy(np.array(seg_labels)).type(torch.FloatTensor)
-    return images, pngs, seg_labels
+    labels = torch.from_numpy(np.array(labels)).type(torch.FloatTensor)
+    return imgs, pngs, labels
 
 
 datasets_root = os.path.join('.', 'datasets')
