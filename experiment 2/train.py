@@ -57,7 +57,9 @@ eval_period = 5
 class_weights = np.ones([num_classes], np.float32)
 #
 save_period = 5
-save_path = './runs'
+save_path = os.path.join('.', 'runs')
+#
+datasets_path = os.path.join('.', 'datasets')
 
 
 def augmentation(image, target):
@@ -108,15 +110,6 @@ def collate(batch):
     return imgs, pngs, labels
 
 
-datasets_root = os.path.join('.', 'datasets')
-exist = os.path.exists(os.path.join(datasets_root, 'VOCdevkit'))
-train_set = VOCSegmentation(datasets_root, image_set='train', download=not exist, transforms=augmentation)
-train_size = len(train_set)
-validate_set = VOCSegmentation(datasets_root, image_set='val', download=not exist, transforms=augmentation)
-validate_size = len(validate_set)
-print(f'训练集: {train_size} 张图片')
-print(f'验证集: {validate_size} 张图片')
-
 if __name__ == '__main__':
     ngpus_per_node = cuda.device_count()
     if use_cuda and use_distributed:
@@ -162,6 +155,14 @@ if __name__ == '__main__':
             model_train = nn.DataParallel(model)
             cudnn.benchmark = True
             model_train = model_train.cuda()
+
+    exist = os.path.exists(os.path.join(datasets_path, 'VOCdevkit'))
+    train_set = VOCSegmentation(datasets_path, image_set='train', download=not exist, transforms=augmentation)
+    train_size = len(train_set)
+    validate_set = VOCSegmentation(datasets_path, image_set='val', download=not exist, transforms=augmentation)
+    validate_size = len(validate_set)
+    print(f'训练集: {train_size} 张图片')
+    print(f'验证集: {validate_size} 张图片')
 
     if local_rank == 0:
         # TODO 显示配置文件

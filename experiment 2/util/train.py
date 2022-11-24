@@ -145,7 +145,7 @@ def one_epoch(epoch: int, epoch_max: int, model: nn.Module, net: nn.Module, opti
 
     bar = None
     if local_rank == 0:
-        print('===== Train started')
+        print('===== Train')
         bar = tqdm(total=length_train, desc=f'Epoch {epoch + 1}/{epoch_max}', postfix=dict, mininterval=0.3)
 
     model.train()
@@ -155,8 +155,7 @@ def one_epoch(epoch: int, epoch_max: int, model: nn.Module, net: nn.Module, opti
 
     if local_rank == 0:
         bar.close()
-        print('===== Train finished')
-        print('=== Validation started')
+        print('===== Validation')
         bar = tqdm(total=length_validate, desc=f'Epoch {epoch + 1}/{epoch_max}', postfix=dict, mininterval=0.3)
 
     model.eval()
@@ -166,7 +165,7 @@ def one_epoch(epoch: int, epoch_max: int, model: nn.Module, net: nn.Module, opti
 
     if local_rank == 0:
         bar.close()
-        print('=== Validation finished')
+        print('===== Report')
         history.append(epoch + 1, total_loss / length_train, validate_loss / length_validate)
         # eval_callback.on_epoch_end(epoch + 1, model_train)
         print('Epoch:' + str(epoch + 1) + '/' + str(epoch_max))
