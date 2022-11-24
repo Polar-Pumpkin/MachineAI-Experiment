@@ -67,10 +67,11 @@ def one_epoch(epoch: int, epoch_max: int, model: nn.Module, net: nn.Module, opti
     validate_loss = 0
     validate_f_score = 0
 
-    def debug(value):
-        if not isinstance(value, torch.Tensor):
-            print('This value is not a Tensor')
-        print('Requires grad:', value.requires_grad, ',', 'grad fn:', value.grad_fn)
+    def debug(**kwargs):
+        for name, value in kwargs:
+            if not isinstance(value, torch.Tensor):
+                print(f'{name}: is not a Tensor')
+            print(f'{name}: Requires grad: {value.requires_grad}, Grad function: {value.grad_fn}')
 
     # noinspection PyTypeChecker
     def one_generation(source, length, is_validation: bool, process_bar: tqdm = None):
@@ -80,9 +81,7 @@ def one_epoch(epoch: int, epoch_max: int, model: nn.Module, net: nn.Module, opti
             if iteration >= length:
                 break
             imgs, pngs, labels = batch
-            debug(imgs)
-            debug(pngs)
-            debug(labels)
+            debug(imgs=imgs, pngs=pngs, labels=labels)
 
             with torch.no_grad():
                 weights = torch.from_numpy(class_weights)
@@ -91,16 +90,14 @@ def one_epoch(epoch: int, epoch_max: int, model: nn.Module, net: nn.Module, opti
                     pngs = pngs.cuda(local_rank)
                     labels = labels.cuda(local_rank)
                     weights = weights.cuda(local_rank)
-                debug(imgs)
-                debug(pngs)
-                debug(labels)
-                debug(weights)
+                debug(imgs=imgs, pngs=pngs, labels=labels, weights=weights)
 
                 if not is_validation:
                     optimizer.zero_grad()
 
                 def forward():
                     outputs = model(imgs)
+                    debug(outputs=outputs)
                     if use_focal_loss:
                         _loss = losses.focal(outputs, pngs, weights, num_classes=num_classes)
                     else:
@@ -123,8 +120,7 @@ def one_epoch(epoch: int, epoch_max: int, model: nn.Module, net: nn.Module, opti
                     with autocast():
                         loss, f_score = forward()
 
-                debug(loss)
-                debug(f_score)
+                debug(loss=loss, f_score=f_score)
 
                 if not is_validation:
                     if use_fp16 and scaler is not None:
