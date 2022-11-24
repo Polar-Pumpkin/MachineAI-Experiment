@@ -1,8 +1,8 @@
 import math
 import os
 from functools import partial
-
 from typing import Union
+
 import numpy as np
 import torch
 import torch.nn as nn
@@ -14,6 +14,7 @@ from tqdm import tqdm
 from . import losses
 from . import metrics
 from .losses import LossHistory
+from .callbacks import Evaluate
 
 
 def yolox_warm_cos_lr(lr, min_lr, total_iters, warmup_total_iters, warmup_lr_start, no_aug_iter, iters):
@@ -59,7 +60,7 @@ def one_epoch(epoch: int, epoch_max: int, model: nn.Module, net: nn.Module, opti
               num_classes: int, class_weights: np.ndarray, scaler: Union[GradScaler, None],
               train_loader: DataLoader, validate_loader: DataLoader, length_train: int, length_validate: int,
               use_cuda: bool, use_fp16: bool, use_dice_loss: bool, use_focal_loss: bool,
-              history: LossHistory,
+              history: LossHistory, evaluate: Evaluate,
               save_period: int, save_path: str, local_rank: int = 0):
     total_loss = 0
     total_f_score = 0
@@ -165,20 +166,23 @@ def one_epoch(epoch: int, epoch_max: int, model: nn.Module, net: nn.Module, opti
 
     if local_rank == 0:
         bar.close()
+        _total_loss = total_loss / length_train
+        _validate_loss = validate_loss / length_validate
+
         print('===== Report')
-        history.append(epoch + 1, total_loss / length_train, validate_loss / length_validate)
-        # eval_callback.on_epoch_end(epoch + 1, model_train)
-        print('Epoch:' + str(epoch + 1) + '/' + str(epoch_max))
-        print('Total Loss: %.3f || Val Loss: %.3f ' % (total_loss / length_train, validate_loss / length_validate))
+        print('Epoch: {}/{}'.format(epoch + 1, epoch_max))
+        print('Total loss: {.3f}'.format(_total_loss))
+        print('Validate loss: {.3f}'.format(_validate_loss))
+        history.append(epoch + 1, _total_loss, _validate_loss)
+        evaluate.execute(epoch + 1)
 
         if (epoch + 1) % save_period == 0 or epoch + 1 == epoch_max:
-            torch.save(model.state_dict(), os.path.join(save_path, 'Epoch({0})-Train({1:.3f})-Validate({2:.3f})'.format(
-                epoch + 1,
-                total_loss / length_train,
-                validate_loss / length_validate
-            )))
+            torch.save(model.state_dict(),
+                       os.path.join(save_path, 'Epoch({0})-Train({1:.3f})-Validate({2:.3f}).pth'.format(
+                           epoch + 1, _total_loss, _validate_loss
+                       )))
 
-        if len(history.validate_losses) <= 1 or (val_loss / length_validate) <= min(history.validate_losses):
-            print('保存性能最好的模型至 best_epoch_weights.pth')
-            torch.save(model.state_dict(), os.path.join(save_path, "Best_epoch_weights.pth"))
-        torch.save(net.state_dict(), os.path.join(save_path, "Last_epoch_weights.pth"))
+        if len(history.validate_losses) <= 1 or _validate_loss <= min(history.validate_losses):
+            print('保存性能最好的模型至 best_weights.pth')
+            torch.save(model.state_dict(), os.path.join(save_path, "best_weights.pth"))
+        torch.save(net.state_dict(), os.path.join(save_path, "last_weights.pth"))

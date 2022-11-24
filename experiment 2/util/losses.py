@@ -10,13 +10,13 @@ from torch.utils.tensorboard import SummaryWriter
 
 
 class LossHistory:
-    def __init__(self, folder: str, model: nn.Module, input_shape: Tuple[int, int]):
-        self.folder = folder
+    def __init__(self, root: str, model: nn.Module, input_shape: Tuple[int, int]):
+        self.root = root
         self.losses = []
         self.validate_losses = []
 
-        os.makedirs(folder, exist_ok=True)
-        self.writer = SummaryWriter(folder)
+        os.makedirs(root, exist_ok=True)
+        self.writer = SummaryWriter(root)
 
         width, height = input_shape
         # noinspection PyBroadException
@@ -26,18 +26,16 @@ class LossHistory:
             pass
 
     def append(self, epoch, loss, validate_loss):
-        if not os.path.exists(self.folder):
-            os.makedirs(self.folder)
+        if not os.path.exists(self.root):
+            os.makedirs(self.root)
 
         self.losses.append(loss)
         self.validate_losses.append(validate_loss)
 
-        with open(os.path.join(self.folder, 'epoch_loss.txt'), 'a') as file:
-            file.write(str(loss))
-            file.write('\n')
-        with open(os.path.join(self.folder, 'epoch_validate_loss.txt'), 'a') as file:
-            file.write(str(validate_loss))
-            file.write('\n')
+        with open(os.path.join(self.root, 'losses.txt'), 'a') as file:
+            file.write(str(loss) + '\n')
+        with open(os.path.join(self.root, 'validate_losses.txt'), 'a') as file:
+            file.write(str(validate_loss) + '\n')
 
         self.writer.add_scalar('loss', loss, epoch)
         self.writer.add_scalar('validate_loss', validate_loss, epoch)
@@ -68,7 +66,7 @@ class LossHistory:
         plt.ylabel('Loss')
         plt.legend(loc='upper right')
 
-        plt.savefig(os.path.join(self.folder, 'epoch_loss.png'))
+        plt.savefig(os.path.join(self.root, 'losses.png'))
         plt.cla()
         plt.close('all')
 

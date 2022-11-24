@@ -14,6 +14,7 @@ from torch.utils.data.distributed import DistributedSampler
 from torchvision.datasets import VOCSegmentation
 
 from model import ResNet18
+from util.callbacks import Evaluate
 from util.losses import LossHistory
 from util.train import get_lr_scheduler
 from util.train import one_epoch
@@ -57,7 +58,7 @@ eval_period = 5
 class_weights = np.ones([num_classes], np.float32)
 #
 save_period = 5
-save_path = os.path.join('.', 'runs')
+save_folder = os.path.join('.', 'runs')
 #
 datasets_path = os.path.join('.', 'datasets')
 
@@ -125,10 +126,10 @@ if __name__ == '__main__':
         local_rank = 0
 
     model = ResNet18(num_classes)
+    root_path = os.path.join(save_folder, datetime.strftime(datetime.now(), '%Y-%m-%d-%H-%M-%S'))
 
     if local_rank == 0:
-        logs_path = os.path.join(save_path, f"loss_{datetime.strftime(datetime.now(), '%Y_%m_%d_%h_%M_%S')}")
-        history = LossHistory(logs_path, model, input_shape)
+        history = LossHistory(root_path, model, input_shape)
     else:
         history = None
 
@@ -218,9 +219,9 @@ if __name__ == '__main__':
                                  pin_memory=True, drop_last=True, collate_fn=collate, sampler=validate_sampler)
 
     if local_rank == 0:
-        eval_callback = None
+        evaluate = Evaluate(root_path, eval_period, validate_set, model, input_shape, num_classes, use_cuda)
     else:
-        eval_callback = None
+        evaluate = None
 
     for epoch in range(epoch_from, epoch_max):
         if epoch >= epoch_freeze and not is_unfreezed:
@@ -238,7 +239,9 @@ if __name__ == '__main__':
 
         one_epoch(epoch, epoch_max, model_train, model, optimizer, num_classes, class_weights, scaler,
                   train_loader, validate_loader, epoch_step, epoch_step_validate,
-                  use_cuda, use_fp16, use_dice_loss, use_focal_loss, history, save_period, save_path, local_rank)
+                  use_cuda, use_fp16, use_dice_loss, use_focal_loss,
+                  history, evaluate,
+                  save_period, root_path, local_rank)
 
         if use_cuda and use_distributed:
             distributed.barrier()
