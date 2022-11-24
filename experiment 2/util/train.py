@@ -67,6 +67,11 @@ def one_epoch(epoch: int, epoch_max: int, model: nn.Module, net: nn.Module, opti
     validate_loss = 0
     validate_f_score = 0
 
+    def debug(value):
+        if not isinstance(value, torch.Tensor):
+            print('This value is not a Tensor')
+        print('Requires grad:', value.requires_grad, ',', 'grad fn:', value.grad_fn)
+
     # noinspection PyTypeChecker
     def one_generation(source, length, is_validation: bool, process_bar: tqdm = None):
         generation_loss = 0
@@ -75,10 +80,6 @@ def one_epoch(epoch: int, epoch_max: int, model: nn.Module, net: nn.Module, opti
             if iteration >= length:
                 break
             imgs, pngs, labels = batch
-            print(f'#{iteration}')
-            print(type(imgs))
-            print(type(pngs))
-            print(type(labels))
 
             with torch.no_grad():
                 weights = torch.from_numpy(class_weights)
@@ -87,10 +88,6 @@ def one_epoch(epoch: int, epoch_max: int, model: nn.Module, net: nn.Module, opti
                     pngs = pngs.cuda(local_rank)
                     labels = labels.cuda(local_rank)
                     weights = weights.cuda(local_rank)
-                print(type(imgs))
-                print(type(pngs))
-                print(type(labels))
-                print(type(weights))
 
                 if not is_validation:
                     optimizer.zero_grad()
@@ -118,9 +115,6 @@ def one_epoch(epoch: int, epoch_max: int, model: nn.Module, net: nn.Module, opti
                     from torch.cuda.amp import autocast
                     with autocast():
                         loss, f_score = forward()
-
-                print(type(loss))
-                print(type(f_score))
 
                 if not is_validation:
                     if use_fp16 and scaler is not None:
