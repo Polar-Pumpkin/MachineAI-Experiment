@@ -80,6 +80,9 @@ def one_epoch(epoch: int, epoch_max: int, model: nn.Module, net: nn.Module, opti
             if iteration >= length:
                 break
             imgs, pngs, labels = batch
+            debug(imgs)
+            debug(pngs)
+            debug(labels)
 
             with torch.no_grad():
                 weights = torch.from_numpy(class_weights)
@@ -88,6 +91,10 @@ def one_epoch(epoch: int, epoch_max: int, model: nn.Module, net: nn.Module, opti
                     pngs = pngs.cuda(local_rank)
                     labels = labels.cuda(local_rank)
                     weights = weights.cuda(local_rank)
+                debug(imgs)
+                debug(pngs)
+                debug(labels)
+                debug(weights)
 
                 if not is_validation:
                     optimizer.zero_grad()
@@ -115,6 +122,9 @@ def one_epoch(epoch: int, epoch_max: int, model: nn.Module, net: nn.Module, opti
                     from torch.cuda.amp import autocast
                     with autocast():
                         loss, f_score = forward()
+
+                debug(loss)
+                debug(f_score)
 
                 if not is_validation:
                     if use_fp16 and scaler is not None:
