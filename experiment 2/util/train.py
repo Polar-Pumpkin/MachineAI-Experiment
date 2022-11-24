@@ -113,7 +113,7 @@ def one_epoch(epoch: int, epoch_max: int, model: nn.Module, net: nn.Module, opti
 
                 if not is_validation:
                     if use_fp16 and scaler is not None:
-                        scaler.scale(loss).backward()
+                        scaler.scale(outputs=loss).backward()
                         scaler.step(optimizer)
                         scaler.update()
                     else:
