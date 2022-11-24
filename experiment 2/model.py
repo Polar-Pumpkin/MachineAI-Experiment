@@ -60,7 +60,7 @@ class ResNet18(nn.Module):
         self.dot = nn.Conv2d(512, num_classes, kernel_size=1)
 
     def debug(self, **kwargs):
-        for name, value in kwargs:
+        for name, value in kwargs.items():
             if not isinstance(value, torch.Tensor):
                 print(f'{name}: is not a Tensor')
             print(f'{name}: Requires grad: {value.requires_grad}, Grad function: {value.grad_fn}')

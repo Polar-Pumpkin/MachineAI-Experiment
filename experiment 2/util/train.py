@@ -68,7 +68,7 @@ def one_epoch(epoch: int, epoch_max: int, model: nn.Module, net: nn.Module, opti
     validate_f_score = 0
 
     def debug(**kwargs):
-        for name, value in kwargs:
+        for name, value in kwargs.items():
             if not isinstance(value, torch.Tensor):
                 print(f'{name}: is not a Tensor')
             print(f'{name}: Requires grad: {value.requires_grad}, Grad function: {value.grad_fn}')
