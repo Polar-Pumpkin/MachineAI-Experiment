@@ -59,11 +59,12 @@ class ResNet18(nn.Module):
         self.upsample = nn.UpsamplingBilinear2d(scale_factor=16)
         self.dot = nn.Conv2d(512, num_classes, kernel_size=1)
 
-    def debug(self, **kwargs):
-        for name, value in kwargs.items():
-            if not isinstance(value, torch.Tensor):
-                print(f'{name}: is not a Tensor')
-            print(f'{name}: Requires grad: {value.requires_grad}, Grad function: {value.grad_fn}')
+    # @staticmethod
+    # def debug(**kwargs):
+    #     for name, value in kwargs.items():
+    #         if not isinstance(value, torch.Tensor):
+    #             print(f'{name}: is not a Tensor')
+    #         print(f'{name}: Requires grad: {value.requires_grad}, Grad function: {value.grad_fn}')
 
     def forward(self, x):
         output = self.conv1(x)
@@ -73,7 +74,7 @@ class ResNet18(nn.Module):
         output = self.stage4(output)
         output = self.upsample(output)
         output = self.dot(output)
-        self.debug(x=x, output=output)
+        # self.debug(x=x, output=output)
         return output
 
 

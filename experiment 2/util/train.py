@@ -67,11 +67,11 @@ def one_epoch(epoch: int, epoch_max: int, model: nn.Module, net: nn.Module, opti
     validate_loss = 0
     validate_f_score = 0
 
-    def debug(**kwargs):
-        for name, value in kwargs.items():
-            if not isinstance(value, torch.Tensor):
-                print(f'{name}: is not a Tensor')
-            print(f'{name}: Requires grad: {value.requires_grad}, Grad function: {value.grad_fn}')
+    # def debug(**kwargs):
+    #     for name, value in kwargs.items():
+    #         if not isinstance(value, torch.Tensor):
+    #             print(f'{name}: is not a Tensor')
+    #         print(f'{name}: Requires grad: {value.requires_grad}, Grad function: {value.grad_fn}')
 
     # noinspection PyTypeChecker
     def one_generation(source, length, is_validation: bool, process_bar: tqdm = None):
@@ -81,7 +81,7 @@ def one_epoch(epoch: int, epoch_max: int, model: nn.Module, net: nn.Module, opti
             if iteration >= length:
                 break
             imgs, pngs, labels = batch
-            debug(imgs=imgs, pngs=pngs, labels=labels)
+            # debug(imgs=imgs, pngs=pngs, labels=labels)
 
             with torch.no_grad():
                 weights = torch.from_numpy(class_weights)
@@ -90,46 +90,46 @@ def one_epoch(epoch: int, epoch_max: int, model: nn.Module, net: nn.Module, opti
                     pngs = pngs.cuda(local_rank)
                     labels = labels.cuda(local_rank)
                     weights = weights.cuda(local_rank)
-                debug(imgs=imgs, pngs=pngs, labels=labels, weights=weights)
+                # debug(imgs=imgs, pngs=pngs, labels=labels, weights=weights)
 
-                if not is_validation:
-                    optimizer.zero_grad()
+            if not is_validation:
+                optimizer.zero_grad()
 
-                def forward():
-                    outputs = model(imgs)
-                    debug(outputs=outputs)
-                    if use_focal_loss:
-                        _loss = losses.focal(outputs, pngs, weights, num_classes=num_classes)
-                    else:
-                        _loss = losses.ce(outputs, pngs, weights, num_classes=num_classes)
-
-                    if use_dice_loss:
-                        _loss = _loss + losses.dice(outputs, labels)
-
-                    if not is_validation:
-                        with torch.no_grad():
-                            _f_score = metrics.f_score(outputs, labels)
-                    else:
-                        _f_score = metrics.f_score(outputs, labels)
-                    return _loss, _f_score
-
-                if is_validation or not use_fp16:
-                    loss, f_score = forward()
+            def forward():
+                outputs = model(imgs)
+                # debug(outputs=outputs)
+                if use_focal_loss:
+                    _loss = losses.focal(outputs, pngs, weights, num_classes=num_classes)
                 else:
-                    from torch.cuda.amp import autocast
-                    with autocast():
-                        loss, f_score = forward()
+                    _loss = losses.ce(outputs, pngs, weights, num_classes=num_classes)
 
-                debug(loss=loss, f_score=f_score)
+                if use_dice_loss:
+                    _loss = _loss + losses.dice(outputs, labels)
 
                 if not is_validation:
-                    if use_fp16 and scaler is not None:
-                        scaler.scale(loss).backward()
-                        scaler.step(optimizer)
-                        scaler.update()
-                    else:
-                        loss.backward()
-                        optimizer.step()
+                    with torch.no_grad():
+                        _f_score = metrics.f_score(outputs, labels)
+                else:
+                    _f_score = metrics.f_score(outputs, labels)
+                return _loss, _f_score
+
+            if is_validation or not use_fp16:
+                loss, f_score = forward()
+            else:
+                from torch.cuda.amp import autocast
+                with autocast():
+                    loss, f_score = forward()
+
+            # debug(loss=loss, f_score=f_score)
+
+            if not is_validation:
+                if use_fp16 and scaler is not None:
+                    scaler.scale(loss).backward()
+                    scaler.step(optimizer)
+                    scaler.update()
+                else:
+                    loss.backward()
+                    optimizer.step()
 
             generation_loss += loss.item()
             generation_f_score += f_score.item()
