@@ -43,7 +43,7 @@ weight_decay = 1e-4
 use_dice_loss = False
 use_focal_loss = False
 # 使用多线程读取数据
-num_workers = 4
+num_workers = 1
 #
 epoch_from = 0
 epoch_freeze = 0
