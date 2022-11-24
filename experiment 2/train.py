@@ -82,6 +82,7 @@ def augmentation(image, target):
     target = cv2.resize(target, (w, h), interpolation=cv2.INTER_NEAREST)
     target = cv2.copyMakeBorder(target, top, bottom, left, right, cv2.BORDER_CONSTANT, value=[0, 0, 0])
     # target = target / 255.0
+    target[target >= num_classes] = num_classes
 
     labels = np.eye(num_classes + 1)[target.reshape([-1])]
     labels = labels.reshape((width, height, num_classes + 1))
