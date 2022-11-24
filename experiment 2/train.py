@@ -222,8 +222,8 @@ if __name__ == '__main__':
         eval_callback = None
 
     for epoch in range(epoch_from, epoch_unfreeze):
-        if epoch >= epoch_freeze and freeze_train and not is_unfreezed:
-            # TODO 代码复用
+        if epoch >= epoch_freeze and not is_unfreezed:
+            # TODO 代码复用 (重新设置超参数)
             for param in model.parameters():
                 param.requires_grad = True
             is_unfreezed = True
