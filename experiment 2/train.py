@@ -25,7 +25,7 @@ use_distributed = False
 # 全局梯度同步 (用于 DDP)
 sync_bn = False
 # 混合精度训练, 可减少约一半的显存 (需要 PyTorch 1.7.1+)
-use_fp16 = True
+use_fp16 = False
 # 分类数量
 num_classes = 21
 # 输入图片大小
@@ -179,7 +179,8 @@ if __name__ == '__main__':
 
     is_unfreezed = False
     if freeze_train:
-        raise NotImplementedError('未实现冻结训练')
+        for param in model.parameters():
+            param.requires_grad = False
 
     batch_size = batch_size_freeze if freeze_train else batch_size_unfreeze
     nbs = 16
@@ -223,7 +224,9 @@ if __name__ == '__main__':
     for epoch in range(epoch_from, epoch_unfreeze):
         if epoch >= epoch_freeze and freeze_train and not is_unfreezed:
             # TODO 代码复用
-            pass
+            for param in model.parameters():
+                param.requires_grad = True
+            is_unfreezed = True
 
         if use_cuda and use_distributed:
             train_sampler.set_epoch(epoch)
