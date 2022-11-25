@@ -36,7 +36,7 @@ class Evaluate:
         truths = []
         predicts = []
 
-        for index, batch in tqdm(enumerate([self.dataset[index] for index in range(size)]), desc='Prepare mIoU'):
+        for index, batch in tqdm(enumerate([self.dataset[index] for index in range(size)]), desc='Prepare mIoU '):
             image, target = batch
             truths.append(target)
 

@@ -53,7 +53,7 @@ batch_size_freeze = 8
 batch_size_unfreeze = 4
 freeze_train = False
 #
-eval_period = 5
+eval_period = 1
 #
 class_weights = np.ones([num_classes], np.float32)
 #
@@ -154,7 +154,7 @@ if __name__ == '__main__':
                                                               find_unused_parameters=True)
         else:
             model_train = nn.DataParallel(model)
-            cudnn.benchmark = True
+            cudnn.benchmark = False
             model_train = model_train.cuda()
 
     exist = os.path.exists(os.path.join(datasets_path, 'VOCdevkit'))

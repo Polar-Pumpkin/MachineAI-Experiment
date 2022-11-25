@@ -137,9 +137,9 @@ def one_epoch(epoch: int, epoch_max: int, model: nn.Module, net: nn.Module, opti
 
             if local_rank == 0 and process_bar is not None:
                 process_bar.set_postfix(**{
-                    'loss': generation_loss / (iteration + 1),
-                    'f_score': generation_f_score / (iteration + 1),
-                    'lr': get_lr(optimizer)
+                    'loss': '{:4f}'.format(generation_loss / (iteration + 1)),
+                    'f score': '{:4f}'.format(generation_f_score / (iteration + 1)),
+                    'lr': '{:7f}'.format(get_lr(optimizer))
                 })
                 process_bar.update(1)
         return generation_loss, generation_f_score
@@ -147,7 +147,7 @@ def one_epoch(epoch: int, epoch_max: int, model: nn.Module, net: nn.Module, opti
     bar = None
     if local_rank == 0:
         print(f'===== Epoch {epoch + 1}/{epoch_max}')
-        bar = tqdm(total=length_train, desc='Train', mininterval=0.3)
+        bar = tqdm(total=length_train, desc='Train     ', mininterval=0.3)
         bar.set_postfix(**{'loss': '?', 'f_score': '?', 'lr': '?'})
 
     model.train()
