@@ -36,8 +36,8 @@ class Evaluate:
         truths = []
         predicts = []
 
-        dataset = [self.dataset[index] for index in range(size)]
-        for index, batch in tqdm(enumerate(dataset), desc='Prepare mIoU'):
+        dataset = [(index, self.dataset[index]) for index in range(size)]
+        for index, batch in tqdm(dataset, desc='Prepare mIoU'):
             image, target = batch
             truths.append(target)
 
@@ -70,7 +70,7 @@ class Evaluate:
         miou = np.nanmean(ious) * 100
         self.x.append(epoch)
         self.y.append(miou)
-        with open(os.path.join(self.root, 'mIoU.txt', 'a')) as file:
+        with open(os.path.join(self.root, 'mIoU.txt'), 'a') as file:
             file.write(str(miou) + '\n')
 
         plt.figure()
