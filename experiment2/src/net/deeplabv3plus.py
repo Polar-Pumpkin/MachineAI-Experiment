@@ -33,11 +33,9 @@ class ASPP(nn.Module):
             nn.BatchNorm2d(dim_out, momentum=momentum),
             nn.ReLU(inplace=True),
         )
-        self.branch5 = nn.Sequential(
-            nn.Conv2d(dim_in, dim_out, 1, 1, 0, bias=True),
-            nn.BatchNorm2d(dim_out, momentum=momentum),
-            nn.ReLU(inplace=True)
-        )
+        self.branch5_conv = nn.Conv2d(dim_in, dim_out, 1, 1, 0, bias=True)
+        self.branch5_bn = nn.BatchNorm2d(dim_out, momentum=momentum)
+        self.branch5_relu = nn.ReLU(inplace=True)
         self.conv_cat = nn.Sequential(
             nn.Conv2d(dim_out * 5, dim_out, 1, 1, padding=0, bias=True),
             nn.BatchNorm2d(dim_out, momentum=momentum),
@@ -54,7 +52,9 @@ class ASPP(nn.Module):
         # 第五个分支, 全局平均池化 + 卷积
         global_feature = torch.mean(x, 2, True)
         global_feature = torch.mean(global_feature, 3, True)
-        global_feature = self.branch5(global_feature)
+        global_feature = self.branch5_conv(global_feature)
+        global_feature = self.branch5_bn(global_feature)
+        global_feature = self.branch5_relu(global_feature)
         global_feature = functional.interpolate(global_feature, (row, col), None, 'bilinear', True)
 
         # 将五个分支的内容堆叠起来
