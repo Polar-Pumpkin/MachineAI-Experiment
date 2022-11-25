@@ -70,11 +70,11 @@ def one_epoch(epoch: int, epoch_max: int, model: nn.Module, net: nn.Module, opti
     validate_loss = 0
     validate_f_score = 0
 
-    def debug(**kwargs):
-        for name, value in kwargs.items():
-            if not isinstance(value, torch.Tensor):
-                print(f'{name}: is not a Tensor')
-            print(f'{name} {value.size()}: Requires grad: {value.requires_grad}, Grad function: {value.grad_fn}')
+    # def debug(**kwargs):
+    #     for name, value in kwargs.items():
+    #         if not isinstance(value, torch.Tensor):
+    #             print(f'{name}: is not a Tensor')
+    #         print(f'{name} {value.size()}: Requires grad: {value.requires_grad}, Grad function: {value.grad_fn}')
 
     # noinspection PyTypeChecker
     def one_generation(source, length, is_validation: bool, process_bar: tqdm = None):
@@ -84,7 +84,7 @@ def one_epoch(epoch: int, epoch_max: int, model: nn.Module, net: nn.Module, opti
             if iteration >= length:
                 break
             imgs, pngs, labels = batch
-            debug(imgs=imgs, pngs=pngs, labels=labels)
+            # debug(imgs=imgs, pngs=pngs, labels=labels)
 
             with torch.no_grad():
                 weights = torch.from_numpy(class_weights)
