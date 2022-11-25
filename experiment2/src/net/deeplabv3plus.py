@@ -167,3 +167,12 @@ class DeepLabV3Plus(nn.Module):
         x = self.cls_conv(x)
         x = functional.interpolate(x, size=(height, width), mode='bilinear', align_corners=True)
         return x
+
+
+if __name__ == '__main__':
+    net = DeepLabV3Plus(21)
+    net.train()
+    X = torch.randn(4, 3, 512, 512)
+    y = net(X)
+    print(type(y))
+    print(y)
