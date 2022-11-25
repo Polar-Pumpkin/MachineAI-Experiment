@@ -48,7 +48,7 @@ num_workers = 1
 #
 epoch_from = 0
 epoch_freeze = 0
-epoch_max = 50
+epoch_max = 100
 batch_size_freeze = 8
 batch_size_unfreeze = 8
 freeze_train = False
