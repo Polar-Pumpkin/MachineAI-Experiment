@@ -4,7 +4,7 @@ import torch
 import torch.nn as nn
 import torch.serialization as serialization
 
-from ..util import models
+from experiment2.util import models
 
 
 class InvertedResidual(nn.Module):
