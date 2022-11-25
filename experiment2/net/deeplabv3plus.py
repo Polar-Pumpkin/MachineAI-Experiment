@@ -4,8 +4,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as functional
 
-from mobilenetv2 import MobileNetV2
-from xception import Xception
+from .mobilenetv2 import MobileNetV2
+from .xception import Xception
 
 
 # ASPP 特征提取模块
