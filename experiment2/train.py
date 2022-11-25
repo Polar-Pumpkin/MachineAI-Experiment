@@ -13,11 +13,11 @@ from torch.utils.data import DataLoader
 from torch.utils.data.distributed import DistributedSampler
 from torchvision.datasets import VOCSegmentation
 
-from net import DeepLabV3Plus
-from util.callbacks import Evaluate
-from util.losses import LossHistory
-from util.train import get_lr_scheduler
-from util.train import one_epoch
+from experiment2.net import DeepLabV3Plus
+from experiment2.util.callbacks import Evaluate
+from experiment2.util.losses import LossHistory
+from experiment2.util.train import get_lr_scheduler
+from experiment2.util.train import one_epoch
 
 # 使用 Cuda
 use_cuda = cuda.is_available()
