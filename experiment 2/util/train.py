@@ -137,9 +137,9 @@ def one_epoch(epoch: int, epoch_max: int, model: nn.Module, net: nn.Module, opti
 
             if local_rank == 0 and process_bar is not None:
                 process_bar.set_postfix(**{
-                    'loss': '{:5.3}'.format(generation_loss / (iteration + 1)),
-                    'f score': '{:5.3}'.format(generation_f_score / (iteration + 1)),
-                    'lr': '{:8.6}'.format(get_lr(optimizer))
+                    'loss': generation_loss / (iteration + 1),
+                    'f score': generation_f_score / (iteration + 1),
+                    'lr': get_lr(optimizer)
                 })
                 process_bar.update(1)
         return generation_loss, generation_f_score
@@ -170,17 +170,19 @@ def one_epoch(epoch: int, epoch_max: int, model: nn.Module, net: nn.Module, opti
         _total_loss = total_loss / length_train
         _validate_loss = validate_loss / length_validate
 
-        print('Total loss: {:.3f}, Validate loss: {:.3f}'.format(_total_loss, _validate_loss))
+        print('Losses: {:.3f}/{:.3f}'.format(_total_loss, _validate_loss))
         history.append(epoch + 1, _total_loss, _validate_loss)
         evaluate.execute(epoch + 1)
 
         if (epoch + 1) % save_period == 0 or epoch + 1 == epoch_max:
-            torch.save(model.state_dict(),
-                       os.path.join(save_path, 'Epoch({})-Train({:.3f})-Validate({:.3f}).pth'.format(
-                           epoch + 1, _total_loss, _validate_loss
-                       )))
+            filename = 'Epoch({})-{:.3f}-{:.3f}.pth'.format(epoch + 1, _total_loss, _validate_loss)
+            print(f'保存阶段性模型至 {filename}')
+            torch.save(model.state_dict(), os.path.join(save_path, filename))
 
         if len(history.validate_losses) <= 1 or _validate_loss <= min(history.validate_losses):
-            print('保存性能最好的模型至 best_weights.pth')
-            torch.save(model.state_dict(), os.path.join(save_path, "best_weights.pth"))
-        torch.save(net.state_dict(), os.path.join(save_path, "last_weights.pth"))
+            filename = 'best.pth'
+            print(f'保存性能最好的模型至 {filename}')
+            torch.save(model.state_dict(), os.path.join(save_path, filename))
+
+        filename = 'latest.pth'
+        torch.save(net.state_dict(), os.path.join(save_path, filename))

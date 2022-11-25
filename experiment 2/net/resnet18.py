@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-from torch.nn import functional as F
+from torch.nn import functional as functional
 
 
 class BasicBlock(nn.Module):
@@ -13,10 +13,10 @@ class BasicBlock(nn.Module):
 
     def forward(self, x):
         output = self.conv1(x)
-        output = F.relu(self.bn1(output))
+        output = functional.relu(self.bn1(output))
         output = self.conv2(output)
         output = self.bn2(output)
-        return F.relu(x + output)
+        return functional.relu(x + output)
 
 
 class DownsampleBlock(nn.Module):
@@ -34,12 +34,12 @@ class DownsampleBlock(nn.Module):
     def forward(self, x):
         extra_x = self.extra(x)
         output = self.conv1(x)
-        out = F.relu(self.bn1(output))
+        out = functional.relu(self.bn1(output))
 
         out = self.conv2(out)
         out = self.bn2(out)
 
-        return F.relu(extra_x + out)
+        return functional.relu(extra_x + out)
 
 
 class ResNet18(nn.Module):

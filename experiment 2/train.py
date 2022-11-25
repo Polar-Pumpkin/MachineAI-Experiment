@@ -13,7 +13,7 @@ from torch.utils.data import DataLoader
 from torch.utils.data.distributed import DistributedSampler
 from torchvision.datasets import VOCSegmentation
 
-from model import ResNet18
+from net import DeepLabV3Plus
 from util.callbacks import Evaluate
 from util.losses import LossHistory
 from util.train import get_lr_scheduler
@@ -125,7 +125,7 @@ if __name__ == '__main__':
         device = torch.device('cuda' if use_cuda and cuda.is_available() else 'cpu')
         local_rank = 0
 
-    model = ResNet18(num_classes)
+    model = DeepLabV3Plus(num_classes)
     root_path = os.path.join(save_folder, datetime.strftime(datetime.now(), '%Y-%m-%d-%H-%M-%S'))
 
     if local_rank == 0:
