@@ -1,6 +1,7 @@
 import math
 import os
 from datetime import datetime
+from datetime import timedelta
 from functools import partial
 from typing import Union
 
@@ -15,6 +16,7 @@ from tqdm import tqdm
 from . import losses
 from . import metrics
 from .callbacks import Evaluate
+from .general import duration
 from .losses import LossHistory
 
 
@@ -148,7 +150,7 @@ def one_epoch(epoch: int, epoch_max: int, model: nn.Module, net: nn.Module, opti
 
     bar = None
     if local_rank == 0:
-        print(f'===== Epoch {epoch + 1}/{epoch_max}')
+        print(f'===== Epoch {epoch}/{epoch_max}')
         bar = tqdm(total=length_train, desc='Train', mininterval=0.3)
         bar.set_postfix(**{'loss': '?', 'f_score': '?', 'lr': '?'})
 
@@ -173,11 +175,11 @@ def one_epoch(epoch: int, epoch_max: int, model: nn.Module, net: nn.Module, opti
         _validate_loss = validate_loss / length_validate
 
         print('Losses: {:.3f}/{:.3f}'.format(_total_loss, _validate_loss))
-        history.append(epoch + 1, _total_loss, _validate_loss)
-        evaluate.execute(epoch + 1)
+        history.append(epoch, _total_loss, _validate_loss)
+        evaluate.execute(epoch)
 
-        if (epoch + 1) % save_period == 0 or epoch + 1 == epoch_max:
-            filename = 'Epoch({})-{:.3f}-{:.3f}.pth'.format(epoch + 1, _total_loss, _validate_loss)
+        if epoch % save_period == 0 or epoch == epoch_max:
+            filename = 'Epoch({})-{:.3f}-{:.3f}.pth'.format(epoch, _total_loss, _validate_loss)
             print(f'保存阶段性模型至 {filename}')
             torch.save(model.state_dict(), os.path.join(save_path, filename))
 
@@ -189,15 +191,10 @@ def one_epoch(epoch: int, epoch_max: int, model: nn.Module, net: nn.Module, opti
         filename = 'latest.pth'
         torch.save(net.state_dict(), os.path.join(save_path, filename))
 
-        elpased = '耗时 '
-        seconds = (datetime.now() - timestamp).seconds
-        hours = seconds // (60 * 60)
-        if hours > 0:
-            elpased += f'{hours}h'
-            seconds = seconds % (60 * 60)
-        minutes = seconds // 60
-        if minutes > 0:
-            elpased += f'{minutes}m'
-            seconds = seconds % 60
-        elpased += f'{seconds}s'
-        print(elpased)
+        now = datetime.now()
+        elpased = (datetime.now() - timestamp).seconds
+        timeleft = (epoch_max - epoch) * elpased
+        scheduled = now + timedelta(seconds=timeleft)
+        print('本轮耗时 {}, 预计 {} 后结束 ({})'.format(
+            duration(elpased), duration(timeleft), scheduled.strftime('%Y-%m-%d %H:%M:%S')
+        ))

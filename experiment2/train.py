@@ -237,7 +237,7 @@ if __name__ == '__main__':
         for param_group in optimizer.param_groups:
             param_group['lr'] = lr
 
-        one_epoch(epoch, epoch_max, model_train, model, optimizer, num_classes, class_weights, scaler,
+        one_epoch(epoch + 1, epoch_max, model_train, model, optimizer, num_classes, class_weights, scaler,
                   train_loader, validate_loader, epoch_step, epoch_step_validate,
                   use_cuda, use_fp16, use_dice_loss, use_focal_loss,
                   history, evaluate,
