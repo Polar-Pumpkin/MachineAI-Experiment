@@ -149,13 +149,11 @@ class DeepLabV3Plus(nn.Module):
         self.cls_conv = nn.Conv2d(256, num_classes, 1, stride=1)
 
     def forward(self, x):
-        print('before backbone:', x.size())
         height, width = x.size(2), x.size(3)
         # 获得两个特征层
         # low_level_features: 浅层特征, 进行卷积处理
         # x: 主干部分, 利用 ASPP 结构进行加强特征提取
         low_level_features, x = self.backbone(x)
-        print('after backbone:', x.size())
         x = self.aspp(x)
         low_level_features = self.shortcut_conv(low_level_features)
 
