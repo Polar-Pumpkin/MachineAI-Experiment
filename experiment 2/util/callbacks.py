@@ -86,8 +86,8 @@ class Evaluate:
         plt.cla()
         plt.close('all')
 
-        print('mIoU: {:.2f}, mPA: {:.2f}, Accuracy: {:.2f}'.format(
-            miou,
-            np.nanmean(pa_recall) * 100,
-            metrics.per_accuracy(hist) * 100
+        print('mIoU: {:.2%}, mPA: {:.2%}, Accuracy: {:.2%}'.format(
+            np.nanmean(ious),
+            np.nanmean(pa_recall),
+            metrics.per_accuracy(hist)
         ))
