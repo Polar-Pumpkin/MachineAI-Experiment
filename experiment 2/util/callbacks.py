@@ -42,7 +42,7 @@ class Evaluate:
 
             image = np.expand_dims(image, 0)
             with torch.no_grad():
-                image = torch.from_numpy(image)
+                image = torch.from_numpy(image).to(dtype=torch.float)
                 if self.use_cuda:
                     image = image.cuda()
 
