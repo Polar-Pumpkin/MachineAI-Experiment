@@ -146,8 +146,8 @@ def one_epoch(epoch: int, epoch_max: int, model: nn.Module, net: nn.Module, opti
 
     bar = None
     if local_rank == 0:
-        print('===== Train')
-        bar = tqdm(total=length_train, desc=f'Epoch {epoch + 1}/{epoch_max}', postfix=dict, mininterval=0.3)
+        print(f'===== Epoch {epoch + 1}/{epoch_max}')
+        bar = tqdm(total=length_train, desc='Train', postfix=dict, mininterval=0.3)
 
     model.train()
     train_loss, train_f_score = one_generation(train_loader, length_train, False, bar)
@@ -156,8 +156,7 @@ def one_epoch(epoch: int, epoch_max: int, model: nn.Module, net: nn.Module, opti
 
     if local_rank == 0:
         bar.close()
-        print('===== Validation')
-        bar = tqdm(total=length_validate, desc=f'Epoch {epoch + 1}/{epoch_max}', postfix=dict, mininterval=0.3)
+        bar = tqdm(total=length_validate, desc=f'Validation', postfix=dict, mininterval=0.3)
 
     model.eval()
     val_loss, val_f_score = one_generation(validate_loader, length_validate, True, bar)
@@ -169,16 +168,14 @@ def one_epoch(epoch: int, epoch_max: int, model: nn.Module, net: nn.Module, opti
         _total_loss = total_loss / length_train
         _validate_loss = validate_loss / length_validate
 
-        print('===== Report')
-        print('Epoch: {}/{}'.format(epoch + 1, epoch_max))
-        print('Total loss: {.3f}'.format(_total_loss))
-        print('Validate loss: {.3f}'.format(_validate_loss))
+        print('Total loss: {:.3f}'.format(_total_loss))
+        print('Validate loss: {:.3f}'.format(_validate_loss))
         history.append(epoch + 1, _total_loss, _validate_loss)
         evaluate.execute(epoch + 1)
 
         if (epoch + 1) % save_period == 0 or epoch + 1 == epoch_max:
             torch.save(model.state_dict(),
-                       os.path.join(save_path, 'Epoch({0})-Train({1:.3f})-Validate({2:.3f}).pth'.format(
+                       os.path.join(save_path, 'Epoch({})-Train({:.3f})-Validate({:.3f}).pth'.format(
                            epoch + 1, _total_loss, _validate_loss
                        )))
 
