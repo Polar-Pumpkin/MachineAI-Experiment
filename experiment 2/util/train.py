@@ -148,6 +148,7 @@ def one_epoch(epoch: int, epoch_max: int, model: nn.Module, net: nn.Module, opti
     if local_rank == 0:
         print(f'===== Epoch {epoch + 1}/{epoch_max}')
         bar = tqdm(total=length_train, desc='Train', mininterval=0.3)
+        bar.set_postfix(**{'loss': '?', 'f_score': '?', 'lr': '?'})
 
     model.train()
     train_loss, train_f_score = one_generation(train_loader, length_train, False, bar)
@@ -157,6 +158,7 @@ def one_epoch(epoch: int, epoch_max: int, model: nn.Module, net: nn.Module, opti
     if local_rank == 0:
         bar.close()
         bar = tqdm(total=length_validate, desc=f'Validation', mininterval=0.3)
+        bar.set_postfix(**{'loss': '?', 'f_score': '?', 'lr': '?'})
 
     model.eval()
     val_loss, val_f_score = one_generation(validate_loader, length_validate, True, bar)
