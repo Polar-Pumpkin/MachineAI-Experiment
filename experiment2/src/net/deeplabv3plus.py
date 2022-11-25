@@ -104,20 +104,20 @@ class _MobileNetV2(nn.Module):
 
 class DeepLabV3Plus(nn.Module):
     def __init__(self, num_classes: int, backbone: str = 'mobilenet', downsample_factor: int = 16,
-                 pretrained: bool = True):
+                 pretrained: bool = True, device = None):
         super(DeepLabV3Plus, self).__init__()
         if backbone == 'xception':
             # 获得两个特征层
             # 浅层特征 [128, 128, 256]
             # 主干部分 [30, 30, 2048]
-            self.backbone = Xception.pretrained(downsample_factor) if pretrained else Xception()
+            self.backbone = Xception.pretrained(downsample_factor, device) if pretrained else Xception()
             in_channels = 2048
             low_level_channels = 256
         elif backbone == 'mobilenet':
             # 获得两个特征层
             # 浅层特征 [128, 128, 24]
             # 主干部分 [30, 30, 320]
-            self.backbone = _MobileNetV2(downsample_factor, pretrained)
+            self.backbone = _MobileNetV2(downsample_factor, pretrained, device)
             in_channels = 320
             low_level_channels = 24
         else:
@@ -167,12 +167,3 @@ class DeepLabV3Plus(nn.Module):
         x = self.cls_conv(x)
         x = functional.interpolate(x, size=(height, width), mode='bilinear', align_corners=True)
         return x
-
-
-if __name__ == '__main__':
-    net = DeepLabV3Plus(21)
-    net.train()
-    X = torch.randn(4, 3, 512, 512)
-    y = net(X)
-    print(type(y))
-    print(y)
