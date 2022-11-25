@@ -37,7 +37,7 @@ class Evaluate:
         predicts = []
 
         dataset = [self.dataset[index] for index in range(size)]
-        for index, batch in tqdm(enumerate(dataset), desc='{:>13}'.format('Prepare mIoU')):
+        for index, batch in tqdm(enumerate(dataset), desc='Prepare mIoU'):
             image, target = batch
             truths.append(target)
 
@@ -54,7 +54,7 @@ class Evaluate:
             predicts.append(image)
 
         hist = np.zeros((self.num_classes, self.num_classes))
-        for index in tqdm(range(size), desc='{:>13}'.format('Evaluate mIoU')):
+        for index in tqdm(range(size), desc='Evaluate mIoU'):
             predict = predicts[index]
             truth = truths[index]
 
