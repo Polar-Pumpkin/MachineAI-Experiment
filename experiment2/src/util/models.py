@@ -5,7 +5,7 @@ import torch.utils.model_zoo as model_zoo
 
 
 def pretrained(net: type, url: str, map_location: torch.serialization.MAP_LOCATION = None, **kwargs):
-    root = os.path.join('.', 'cached')
+    root = os.path.join('', 'cached')
     if not os.path.exists(root):
         os.makedirs(root)
     filename = url.split('/')[-1]
