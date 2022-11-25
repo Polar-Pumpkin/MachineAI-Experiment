@@ -8,13 +8,13 @@ from ..util import models
 
 
 class InvertedResidual(nn.Module):
-    def __init__(self, input_channels: int, out_channels: int, stride: int, expand_ratio: int):
+    def __init__(self, in_channels: int, out_channels: int, stride: int, expand_ratio: int):
         super(InvertedResidual, self).__init__()
         assert stride in [1, 2]
         self.stride = stride
 
-        hidden_dim = round(input_channels * expand_ratio)
-        self.use_residual_connect = self.stride == 1 and input_channels == out_channels
+        hidden_dim = round(in_channels * expand_ratio)
+        self.use_residual_connect = self.stride == 1 and in_channels == out_channels
 
         if expand_ratio == 1:
             self.conv = nn.Sequential(
@@ -29,7 +29,7 @@ class InvertedResidual(nn.Module):
         else:
             self.conv = nn.Sequential(
                 # 利用 1x1 卷积进行通道数的上升
-                nn.Conv2d(input_channels, hidden_dim, 1, 1, 0, bias=False),
+                nn.Conv2d(in_channels, hidden_dim, 1, 1, 0, bias=False),
                 nn.BatchNorm2d(hidden_dim),
                 nn.ReLU6(inplace=True),
                 # 进行 3x3 的逐层卷积，进行跨特征点的特征提取
@@ -52,13 +52,13 @@ class MobileNetV2(nn.Module):
     def __init__(self, num_classes: int = 1000, input_size: int = 224, width_multiple: float = 1.0):
         super(MobileNetV2, self).__init__()
         assert input_size % 32 == 0
-        input_channels = int(32 * width_multiple)
+        in_channels = int(32 * width_multiple)
         self.last_channel = int(1280 * width_multiple) if width_multiple > 1.0 else 1280
         # 512, 512, 3 -> 256, 256, 32
         self.features = [
             nn.Sequential(
-                nn.Conv2d(3, input_channels, 3, 2, 1, bias=False),
-                nn.BatchNorm2d(input_channels),
+                nn.Conv2d(3, in_channels, 3, 2, 1, bias=False),
+                nn.BatchNorm2d(in_channels),
                 nn.ReLU6(inplace=True)
             )
         ]
@@ -74,16 +74,16 @@ class MobileNetV2(nn.Module):
             [6, 320, 1, 1],  # 16, 16, 160 -> 16, 16, 320
         ]
         for t, c, n, s in interverted_residuals:
-            output_channels = int(c * width_multiple)
+            out_channels = int(c * width_multiple)
             for i in range(n):
                 if i == 0:
-                    self.features.append(InvertedResidual(input_channels, output_channels, s, expand_ratio=t))
+                    self.features.append(InvertedResidual(in_channels, out_channels, s, expand_ratio=t))
                 else:
-                    self.features.append(InvertedResidual(input_channels, output_channels, 1, expand_ratio=t))
-                input_channels = output_channels
+                    self.features.append(InvertedResidual(in_channels, out_channels, 1, expand_ratio=t))
+                in_channels = out_channels
 
         self.features.append(nn.Sequential(
-            nn.Conv2d(input_channels, self.last_channel, 1, 1, 0, bias=False),
+            nn.Conv2d(in_channels, self.last_channel, 1, 1, 0, bias=False),
             nn.BatchNorm2d(self.last_channel),
             nn.ReLU6(inplace=True)
         ))

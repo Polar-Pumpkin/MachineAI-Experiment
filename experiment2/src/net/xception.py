@@ -9,17 +9,17 @@ from ..util import models
 
 
 class SeparableConv2d(nn.Module):
-    def __init__(self, input_channels: int, output_channels: int,
+    def __init__(self, in_channels: int, out_channels: int,
                  kernel_size: int = 1, stride: int = 1, padding: int = 0, dilation: int = 1, momentum: float = 0.0003,
                  bias: bool = False, activate_first: bool = True, inplace: bool = True):
         super(SeparableConv2d, self).__init__()
         self.relu0 = nn.ReLU(inplace=inplace)
-        self.depthwise = nn.Conv2d(input_channels, input_channels, kernel_size, stride, padding, dilation,
-                                   groups=input_channels, bias=bias)
-        self.bn1 = nn.BatchNorm2d(input_channels, momentum=momentum)
+        self.depthwise = nn.Conv2d(in_channels, in_channels, kernel_size, stride, padding, dilation,
+                                   groups=in_channels, bias=bias)
+        self.bn1 = nn.BatchNorm2d(in_channels, momentum=momentum)
         self.relu1 = nn.ReLU(inplace=True)
-        self.pointwise = nn.Conv2d(input_channels, output_channels, 1, 1, 0, 1, 1, bias=bias)
-        self.bn2 = nn.BatchNorm2d(output_channels, momentum=momentum)
+        self.pointwise = nn.Conv2d(in_channels, out_channels, 1, 1, 0, 1, 1, bias=bias)
+        self.bn2 = nn.BatchNorm2d(out_channels, momentum=momentum)
         self.relu2 = nn.ReLU(inplace=True)
         self.activate_first = activate_first
 
@@ -38,7 +38,7 @@ class SeparableConv2d(nn.Module):
 
 
 class Block(nn.Module):
-    def __init__(self, input_filters: int, output_filters: int,
+    def __init__(self, in_filters: int, out_filters: int,
                  strides: int = 1, atrous: Union[List[int], int, None] = None, momentum=0.0003,
                  grow_first: bool = True, activate_first: bool = True, inplace: bool = True):
         super(Block, self).__init__()
@@ -48,24 +48,24 @@ class Block(nn.Module):
             atrous = [atrous] * 3
 
         self.head_relu = True
-        if output_filters != input_filters or strides != 1:
-            self.skip = nn.Conv2d(input_filters, output_filters, 1, stride=strides, bias=False)
-            self.skipbn = nn.BatchNorm2d(output_filters, momentum=momentum)
+        if out_filters != in_filters or strides != 1:
+            self.skip = nn.Conv2d(in_filters, out_filters, 1, stride=strides, bias=False)
+            self.skipbn = nn.BatchNorm2d(out_filters, momentum=momentum)
             self.head_relu = False
         else:
             self.skip = None
 
         self.hook_layer = None
         if grow_first:
-            filters = output_filters
+            filters = out_filters
         else:
-            filters = input_filters
+            filters = in_filters
 
-        self.sepconv1 = SeparableConv2d(input_filters, filters, 3, stride=1, padding=1 * atrous[0], dilation=atrous[0],
+        self.sepconv1 = SeparableConv2d(in_filters, filters, 3, stride=1, padding=1 * atrous[0], dilation=atrous[0],
                                         bias=False, activate_first=activate_first, inplace=self.head_relu)
-        self.sepconv2 = SeparableConv2d(filters, output_filters, 3, stride=1, padding=1 * atrous[1], dilation=atrous[1],
+        self.sepconv2 = SeparableConv2d(filters, out_filters, 3, stride=1, padding=1 * atrous[1], dilation=atrous[1],
                                         bias=False, activate_first=activate_first)
-        self.sepconv3 = SeparableConv2d(output_filters, output_filters, 3, stride=strides, padding=1 * atrous[2],
+        self.sepconv3 = SeparableConv2d(out_filters, out_filters, 3, stride=strides, padding=1 * atrous[2],
                                         dilation=atrous[2], bias=False, activate_first=activate_first, inplace=inplace)
 
     def forward(self, x):
