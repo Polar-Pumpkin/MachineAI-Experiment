@@ -1,5 +1,6 @@
 import math
 import os
+from datetime import datetime
 from functools import partial
 from typing import Union
 
@@ -13,8 +14,8 @@ from tqdm import tqdm
 
 from . import losses
 from . import metrics
-from .losses import LossHistory
 from .callbacks import Evaluate
+from .losses import LossHistory
 
 
 def yolox_warm_cos_lr(lr, min_lr, total_iters, warmup_total_iters, warmup_lr_start, no_aug_iter, iters):
@@ -62,6 +63,7 @@ def one_epoch(epoch: int, epoch_max: int, model: nn.Module, net: nn.Module, opti
               use_cuda: bool, use_fp16: bool, use_dice_loss: bool, use_focal_loss: bool,
               history: LossHistory, evaluate: Evaluate,
               save_period: int, save_path: str, local_rank: int = 0):
+    timestamp = datetime.now()
     total_loss = 0
     total_f_score = 0
 
@@ -186,3 +188,16 @@ def one_epoch(epoch: int, epoch_max: int, model: nn.Module, net: nn.Module, opti
 
         filename = 'latest.pth'
         torch.save(net.state_dict(), os.path.join(save_path, filename))
+
+        elpased = '耗时 '
+        seconds = (datetime.now() - timestamp).seconds
+        hours = seconds // (60 * 60)
+        if hours > 0:
+            elpased += f'{hours}h'
+            seconds = seconds % (60 * 60)
+        minutes = seconds // 60
+        if minutes > 0:
+            elpased += f'{minutes}m'
+            seconds = seconds % 60
+        elpased += f'{seconds}s'
+        print(elpased)
