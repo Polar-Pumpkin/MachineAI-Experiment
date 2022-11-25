@@ -47,7 +47,7 @@ class Evaluate:
                 if self.use_cuda:
                     image = image.cuda()
 
-                outputs = self.net(image)
+                outputs = self.net(image)[0]
                 outputs = functional.softmax(outputs.permute(1, 2, 0), dim=-1).cpu().numpy()
                 outputs = outputs.argmax(axis=-1)
             image = np.uint8(outputs)
