@@ -1,9 +1,12 @@
 import argparse
+import colorsys
+import itertools
 import os
 import time
 
 import numpy as np
 import torch
+import torch.nn.functional as functional
 from PIL import Image
 
 from src.net import DeepLabV3Plus
@@ -60,5 +63,22 @@ inputs = torch.from_numpy(inputs)
 inputs = inputs.to(torch.float32)
 debug(inputs=inputs)
 
-outputs = net(inputs)
-debug(outputs=outputs)
+classes = ['background', 'aeroplane', 'bicycle', 'bird', 'boat', 'bottle', 'bus', 'car', 'cat', 'chair', 'cow',
+           'diningtable', 'dog', 'horse', 'motorbike', 'person', 'potted plant', 'sheep', 'sofa', 'train', 'tv/monitor']
+colors = [(x / 21, 1.0, 1.0) for x in range(21)]
+colors = itertools.starmap(colorsys.hsv_to_rgb, colors)
+colors = map(lambda x: tuple(map(lambda y: int(y * 255), x)), colors)
+colors = list(colors)
+
+with torch.no_grad():
+    outputs = net(inputs)
+    outputs = functional.softmax(outputs.permute(1, 2, 0), dim=-1).cpu().numpy()
+    outputs = outputs.argmax(axis=-1)
+    debug(outputs=outputs)
+
+mask = np.reshape(np.array(colors, np.uint8)[np.reshape(outputs, [-1])], [512, 512, -1])
+mask = Image.fromarray(np.uint8(mask))
+
+filename, _ = os.path.split(input_path)
+combined = Image.blend(image, mask, 0.7)
+combined.save(os.path.join('cache', f'output_{filename}'))
