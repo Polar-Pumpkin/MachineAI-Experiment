@@ -54,4 +54,4 @@ def fill(images: Union[Image.Image, List[Image.Image]], input_shape: Tuple[int, 
 
     if isinstance(transforms, bool):
         transforms = [transforms] * size
-    return map(lambda batch: _fill(batch[0], batch[1]), zip(images, transforms))
+    return map(_fill, images, transforms)
