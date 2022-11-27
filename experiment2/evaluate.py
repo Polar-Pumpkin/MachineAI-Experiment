@@ -57,7 +57,7 @@ image = Image.open(input_path)
 inputs = list(fill(image, (512, 512)))[0]
 inputs = np.expand_dims(inputs, axis=0)
 inputs = torch.from_numpy(inputs)
-inputs = inputs.to(torch.double)
+inputs = inputs.to(torch.float32)
 debug(inputs=inputs)
 
 outputs = net(inputs)
