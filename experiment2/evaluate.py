@@ -55,6 +55,7 @@ net.eval()
 image = Image.open(input_path)
 inputs = np.array(image, np.float64)
 inputs = np.expand_dims(inputs, axis=0)
+inputs = torch.from_numpy(inputs)
 print(type(inputs))
 print(inputs.shape)
 

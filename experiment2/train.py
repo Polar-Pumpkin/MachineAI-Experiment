@@ -1,7 +1,6 @@
 import os
 from datetime import datetime
 
-import cv2
 import numpy as np
 import torch
 import torch.cuda as cuda
@@ -15,6 +14,7 @@ from torchvision.datasets import VOCSegmentation
 
 from src.net import DeepLabV3Plus
 from src.util.callbacks import Evaluate
+from src.util.general import fill
 from src.util.losses import LossHistory
 from src.util.train import get_lr_scheduler
 from src.util.train import one_epoch
@@ -64,32 +64,7 @@ datasets_path = os.path.join('.', 'datasets')
 
 
 def augmentation(image, target):
-    w, h = image.size
-    if w > h:
-        w, h = width, int(h * (w / width))
-    else:
-        w, h = int(w * (h / height)), height
-
-    top = 0
-    bottom = max(height - h, 0)
-    left = 0
-    right = max(width - w, 0)
-
-    image = np.array(image, np.float64)
-    image = cv2.resize(image, (w, h))
-    image = cv2.copyMakeBorder(image, top, bottom, left, right, cv2.BORDER_CONSTANT, value=[0, 0, 0])
-    image = np.transpose(image, (2, 0, 1))
-    image = image / 255.0
-
-    target = np.array(target)
-    target = cv2.resize(target, (w, h), interpolation=cv2.INTER_NEAREST)
-    target = cv2.copyMakeBorder(target, top, bottom, left, right, cv2.BORDER_CONSTANT, value=[0, 0, 0])
-    # target = target / 255.0
-    # target[target >= num_classes] = num_classes
-
-    # labels = np.eye(num_classes + 1)[target.reshape([-1])]
-    # labels = labels.reshape((width, height, num_classes + 1))
-    return image, target
+    return tuple(fill([image, target], input_shape, [True, False]))
 
 
 def collate(batch):
