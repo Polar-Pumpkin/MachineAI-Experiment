@@ -55,6 +55,8 @@ net.eval()
 image = Image.open(input_path)
 inputs = np.array(image, np.float64)
 inputs = np.expand_dims(inputs, axis=0)
+print(type(inputs))
+print(inputs.shape)
 
 outputs = net(inputs)
 print(type(outputs))
