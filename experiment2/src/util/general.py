@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import Tuple, Union, List
 
 import cv2
 import numpy as np
@@ -24,12 +24,10 @@ def duration(seconds: int) -> str:
     return ' '.join(descriptions)
 
 
-# noinspection PyUnresolvedReferences
 def fill(images: Union[Image.Image, List[Image.Image]], input_shape: Tuple[int, int],
          transforms: Union[bool, List[bool]] = True):
     width, height = input_shape
 
-    # noinspection PyUnresolvedReferences, PyTypeChecker
     def _fill(image: Image.Image, transform: bool):
         w, h = image.size
         if w > h:
