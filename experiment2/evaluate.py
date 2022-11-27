@@ -16,6 +16,10 @@ parser.add_argument('-m', '--model', help='模型的路径')
 args = parser.parse_args()
 
 input_path = args.input
+if not os.path.exists(input_path):
+    print(f'无效的输入图像路径: {input_path}')
+    exit()
+
 if args.model is not None:
     model_path = args.model
 else:
@@ -37,6 +41,10 @@ else:
                 latest = name, timestamp
     name, _ = latest
     model_path = os.path.join('runs', name, 'best.pth')
+if not os.path.exists(model_path):
+    print(f'无效的模型路径: {model_path}')
+    exit()
+
 print(f'输入图像: {input_path}')
 print(f'模型路径: {model_path}')
 
@@ -46,7 +54,7 @@ net.load_state_dict(torch.load(model_path), False)
 net.eval()
 image = Image.open(input_path)
 inputs = np.array(image, np.float64)
-inputs = np.expand_dims(inputs, axis=-1)
+inputs = np.expand_dims(inputs, axis=0)
 
 outputs = net(inputs)
 print(type(outputs))
