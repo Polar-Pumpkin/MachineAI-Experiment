@@ -71,7 +71,7 @@ colors = map(lambda x: tuple(map(lambda y: int(y * 255), x)), colors)
 colors = list(colors)
 
 with torch.no_grad():
-    outputs = net(inputs)
+    outputs = net(inputs)[0]
     outputs = functional.softmax(outputs.permute(1, 2, 0), dim=-1).cpu().numpy()
     outputs = outputs.argmax(axis=-1)
     debug(outputs=outputs)
@@ -82,3 +82,4 @@ mask = Image.fromarray(np.uint8(mask))
 filename, _ = os.path.split(input_path)
 combined = Image.blend(image, mask, 0.7)
 combined.save(os.path.join('cache', f'output_{filename}'))
+print('文件已保存')
