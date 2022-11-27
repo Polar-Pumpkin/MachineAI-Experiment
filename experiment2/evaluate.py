@@ -7,7 +7,7 @@ import torch
 from PIL import Image
 
 from src.net import DeepLabV3Plus
-from src.util.general import fill
+from src.util.general import fill, debug
 
 parser = argparse.ArgumentParser()
 
@@ -57,9 +57,8 @@ image = Image.open(input_path)
 inputs = list(fill(image, (512, 512)))[0]
 inputs = np.expand_dims(inputs, axis=0)
 inputs = torch.from_numpy(inputs)
-print(type(inputs))
-print(inputs.shape)
+inputs = inputs.to(torch.double)
+debug(inputs=inputs)
 
 outputs = net(inputs)
-print(type(outputs))
-print(outputs.shape)
+debug(outputs=outputs)

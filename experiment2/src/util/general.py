@@ -2,6 +2,7 @@ from typing import Tuple, Union, List
 
 import cv2
 import numpy as np
+import torch
 from PIL import Image
 
 
@@ -55,3 +56,14 @@ def fill(images: Union[Image.Image, List[Image.Image]], input_shape: Tuple[int, 
     if isinstance(transforms, bool):
         transforms = [transforms] * size
     return map(_fill, images, transforms)
+
+
+def debug(**kwargs):
+    for name, value in kwargs.items():
+        print(f'{name} ({type(value)})', end=': ')
+        if isinstance(value, torch.Tensor):
+            shape = ', '.join(value.size())
+            print(f'[{shape}, {value.dtype}]', end=', ')
+            print(f'Requires grad={value.requires_grad}', end=', ')
+            print(f'Grad function={value.grad_fn}', end='')
+        print('\n', end='')
