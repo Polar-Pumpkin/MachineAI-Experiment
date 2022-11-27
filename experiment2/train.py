@@ -148,11 +148,13 @@ if __name__ == '__main__':
             if train_size // batch_size_unfreeze == 0:
                 raise ValueError('无法进行训练: 数据集过小, 请扩充数据集')
             epoch_wanted = step_wanted // (train_size // batch_size_unfreeze) + 1
-            print('使用 %s 优化器时, 建议将训练总步长设置到 %d 以上' % (optimizer_type, step_wanted))
-            print('本次运行的总训练数据量为 %d, 解冻训练的批大小为 %d, 共训练 %d 轮, 计算出总训练步长为 %d' % (
-                train_size, batch_size_unfreeze, epoch_max, step_total))
-            print(
-                '由于总训练步长为 %d, 小于建议总步长 %d, 建议设置总轮数为 %d' % (step_total, step_wanted, epoch_wanted))
+            print('使用 {} 优化器时, 建议将训练总步长设置到 {} 以上'.format(optimizer_type.upper(), step_wanted))
+            print('本次运行的总训练数据量为 {}, 解冻训练的批大小为 {}, 共训练 {} 轮, 计算出总训练步长为 {}'.format(
+                train_size, batch_size_unfreeze, epoch_max, step_total
+            ))
+            print('由于总训练步长为 {}, 小于建议总步长 {}, 建议设置总轮数为 {}'.format(
+                step_total, step_wanted, epoch_wanted
+            ))
 
     is_unfreezed = False
     if freeze_train:
