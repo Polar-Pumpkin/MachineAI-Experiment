@@ -55,8 +55,9 @@ print(f'模型路径: {model_path}')
 net = DeepLabV3Plus(21, pretrained=False)
 net.load_state_dict(torch.load(model_path), False)
 
-net.eval()
 image = Image.open(input_path)
+print('Image: ', ', '.join(map(str, image.size)), sep='')
+
 inputs = list(fill(image, (512, 512)))[0]
 inputs = np.expand_dims(inputs, axis=0)
 inputs = torch.from_numpy(inputs)
@@ -71,6 +72,7 @@ colors = map(lambda x: tuple(map(lambda y: int(y * 255), x)), colors)
 colors = list(colors)
 
 with torch.no_grad():
+    net.eval()
     outputs = net(inputs)[0]
     outputs = functional.softmax(outputs.permute(1, 2, 0), dim=-1).cpu().numpy()
     outputs = outputs.argmax(axis=-1)
@@ -78,6 +80,7 @@ with torch.no_grad():
 
 mask = np.reshape(np.array(colors, np.uint8)[np.reshape(outputs, [-1])], [512, 512, -1])
 mask = Image.fromarray(np.uint8(mask))
+print('Mask: ', ', '.join(map(str, mask.size)), sep='')
 
 filename, _ = os.path.split(input_path)
 combined = Image.blend(image, mask, 0.7)
