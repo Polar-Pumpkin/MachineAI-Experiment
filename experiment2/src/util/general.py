@@ -40,7 +40,7 @@ def fill(images: Union[Image.Image, List[Image.Image]], input_shape: Tuple[int, 
         left = 0
         right = max(width - w, 0)
 
-        image = np.array(image, np.float64)
+        image = np.array(image)
         image = cv2.resize(image, (w, h))
         image = cv2.copyMakeBorder(image, top, bottom, left, right, cv2.BORDER_CONSTANT, value=[0, 0, 0])
         if transform:
