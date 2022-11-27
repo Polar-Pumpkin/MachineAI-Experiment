@@ -80,10 +80,10 @@ with torch.no_grad():
     debug(outputs=outputs)
     outputs = outputs[0]
     outputs = functional.softmax(outputs.permute(1, 2, 0), dim=-1).cpu().numpy()
-    outputs = outputs[:width, :height]
+    outputs = outputs[:height, :width]
     outputs = outputs.argmax(axis=-1)
 
-mask = np.reshape(np.array(colors, np.uint8)[np.reshape(outputs, [-1])], [width, height, -1])
+mask = np.reshape(np.array(colors, np.uint8)[np.reshape(outputs, [-1])], [height, width, -1])
 mask = Image.fromarray(np.uint8(mask))
 print('Mask: ', 'x'.join(map(str, mask.size)), sep='')
 
