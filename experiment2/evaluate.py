@@ -89,5 +89,5 @@ print('Mask: ', 'x'.join(map(str, mask.size)), sep='')
 
 _, filename = os.path.split(input_path)
 combined = Image.blend(image, mask, 0.7)
-combined.save(os.path.join('cache', f'output_{filename}'))
+combined.save(os.path.join('cached', f'output_{filename}'))
 print('文件已保存')
