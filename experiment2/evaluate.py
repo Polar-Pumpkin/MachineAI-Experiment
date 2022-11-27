@@ -78,7 +78,8 @@ with torch.no_grad():
     outputs = outputs.argmax(axis=-1)
     debug(outputs=outputs)
 
-mask = np.reshape(np.array(colors, np.uint8)[np.reshape(outputs, [-1])], [512, 512, -1])
+width, height = image.size
+mask = np.reshape(np.array(colors, np.uint8)[np.reshape(outputs, [-1])], [width, height, -1])
 mask = Image.fromarray(np.uint8(mask))
 print('Mask: ', ', '.join(map(str, mask.size)), sep='')
 
