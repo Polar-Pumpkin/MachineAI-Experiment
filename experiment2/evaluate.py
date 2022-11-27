@@ -37,6 +37,8 @@ else:
                 latest = name, timestamp
     name, _ = latest
     model_path = os.path.join('runs', name, 'best.pth')
+print(f'输入图像: {input_path}')
+print(f'模型路径: {model_path}')
 
 net = DeepLabV3Plus(21, pretrained=False)
 net.load_state_dict(torch.load(model_path), False)
