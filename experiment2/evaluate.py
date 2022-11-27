@@ -56,9 +56,11 @@ net = DeepLabV3Plus(21, pretrained=False)
 net.load_state_dict(torch.load(model_path), False)
 
 image = Image.open(input_path)
-print('Image: ', ', '.join(map(str, image.size)), sep='')
+print('Image: ', 'x'.join(map(str, image.size)), sep='')
 
-inputs = list(fill(image, (512, 512)))[0]
+input_shape = (512, 512)
+
+inputs = list(fill(image, input_shape))[0]
 inputs = np.expand_dims(inputs, axis=0)
 inputs = torch.from_numpy(inputs)
 inputs = inputs.to(torch.float32)
@@ -71,17 +73,19 @@ colors = itertools.starmap(colorsys.hsv_to_rgb, colors)
 colors = map(lambda x: tuple(map(lambda y: int(y * 255), x)), colors)
 colors = list(colors)
 
+width, height = image.size
 with torch.no_grad():
     net.eval()
-    outputs = net(inputs)[0]
-    outputs = functional.softmax(outputs.permute(1, 2, 0), dim=-1).cpu().numpy()
-    outputs = outputs.argmax(axis=-1)
+    outputs = net(inputs)
     debug(outputs=outputs)
+    outputs = outputs[0]
+    outputs = functional.softmax(outputs.permute(1, 2, 0), dim=-1).cpu().numpy()
+    outputs = outputs[:width, :height]
+    outputs = outputs.argmax(axis=-1)
 
-width, height = image.size
 mask = np.reshape(np.array(colors, np.uint8)[np.reshape(outputs, [-1])], [width, height, -1])
 mask = Image.fromarray(np.uint8(mask))
-print('Mask: ', ', '.join(map(str, mask.size)), sep='')
+print('Mask: ', 'x'.join(map(str, mask.size)), sep='')
 
 filename, _ = os.path.split(input_path)
 combined = Image.blend(image, mask, 0.7)
