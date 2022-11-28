@@ -18,6 +18,7 @@ parser = argparse.ArgumentParser()
 
 parser.add_argument('input', help='输入图像的路径')
 parser.add_argument('-m', '--model', help='模型的路径')
+parser.add_argument('-d', '--detail', help='输出 21 张预测图', action='store_true')
 
 args = parser.parse_args()
 
@@ -92,7 +93,7 @@ classes = ['background', 'aeroplane', 'bicycle', 'bird', 'boat', 'bottle', 'bus'
 colors = [(x / 21, 1.0, 1.0) for x in range(21)]
 colors = itertools.starmap(colorsys.hsv_to_rgb, colors)
 colors = map(lambda x: tuple(map(lambda y: int(y * 255), x)), colors)
-colors = list(colors)
+colors = np.array(list(colors), np.uint8)
 
 net = DeepLabV3Plus(21, pretrained=False)
 net.load_state_dict(torch.load(model_path), False)
@@ -119,8 +120,18 @@ for filename, path in bar:
 
         outputs = functional.softmax(outputs.permute(1, 2, 0), dim=-1).cpu().numpy()
         outputs = outputs[:height, :width]
-        outputs = outputs.argmax(axis=-1)
-    mask = np.reshape(np.array(colors, np.uint8)[np.reshape(outputs, [-1])], [height, width, -1])
+        if args.detail:
+            for clazz in range(21):
+                frame = outputs[:, :, clazz]
+                frame[frame >= 0.85] = clazz
+                frame[frame < 0.85] = 0
+                mask = np.reshape(colors[frame.flatten()], [height, width, -1])
+                mask = Image.fromarray(np.uint8(mask))
+                mask.save(os.path.join('output', 'masks', index, f'{clazz}_{classes[clazz]}.png'))
+            continue
+        else:
+            outputs = outputs.argmax(axis=-1)
+    mask = np.reshape(colors[outputs.flatten()], [height, width, -1])
     mask = Image.fromarray(np.uint8(mask))
     mask.save(os.path.join('output', 'masks', filename))
 
