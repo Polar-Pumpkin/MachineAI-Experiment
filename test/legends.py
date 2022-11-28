@@ -17,19 +17,22 @@ def bgr(r: int, g: int, b: int) -> Tuple[int, int, int]:
     return b, g, r
 
 
-legend_padding = 10
-legend_width, legend_height = (60, 20)
-legends = np.zeros(((legend_height * 21) + (legend_padding * 2), 240, 3), dtype=np.uint8)
+white = (255, 255, 255)
+black = (0, 0, 0)
+
+padding = 10
+width, height = (60, 20)
+canvas = np.zeros(((height * 21) + (padding * 2), 240, 3), dtype=np.uint8)
+canvas.fill(255)
 for clazz, name in enumerate(classes):
-    x = legend_padding
-    y = clazz * legend_height + legend_padding
+    x = padding
+    y = clazz * height + padding
 
     color = colors[clazz]
-    cv2.rectangle(legends, (x, y), (x + legend_width, y + legend_height), bgr(*color), -1)
-    cv2.rectangle(legends, (x, y), (x + legend_width, y + legend_height), bgr(*(0, 0, 0)))
-    cv2.putText(legends, name, (x + legend_width + legend_padding, y + 16),
-                cv2.FONT_HERSHEY_DUPLEX, 0.6, (255, 255, 255))
-cv2.imshow('Legends', legends)
+    cv2.rectangle(canvas, (x, y), (x + width, y + height), bgr(*color), -1)
+    cv2.rectangle(canvas, (x, y), (x + width, y + height), white)
+    cv2.putText(canvas, name, (x + width + padding, y + 16), cv2.FONT_HERSHEY_DUPLEX, 0.6, black)
+cv2.imshow('Legends', canvas)
 
 cv2.waitKey(0)
 cv2.destroyAllWindows()
