@@ -73,18 +73,21 @@ colors = itertools.starmap(colorsys.hsv_to_rgb, colors)
 colors = map(lambda x: tuple(map(lambda y: int(y * 255), x)), colors)
 colors = list(colors)
 
+_, filename = os.path.split(input_path)
 width, height = image.size
 with torch.no_grad():
     net.eval()
     outputs = net(inputs)
     debug(outputs=outputs)
     outputs = outputs[0]
+    np.save(os.path.join('cached', f"raw_{filename.split('.')[0]}.npy"), outputs.cpu().numpy())
+    print('矩阵已保存')
+
     outputs = functional.softmax(outputs.permute(1, 2, 0), dim=-1).cpu().numpy()
     outputs = outputs[:height, :width]
     outputs = outputs.argmax(axis=-1)
     debug(outputs=outputs)
 
-_, filename = os.path.split(input_path)
 np.savetxt(os.path.join('cached', f"array_{filename.split('.')[0]}.txt"), outputs, fmt='%d')
 print('矩阵已保存')
 
