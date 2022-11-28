@@ -61,9 +61,15 @@ def fill(images: Union[Image.Image, List[Image.Image]], input_shape: Tuple[int, 
 def debug(**kwargs):
     for name, value in kwargs.items():
         print(f'{name} ({type(value)})', end=': ')
+
         if isinstance(value, torch.Tensor):
             shape = ', '.join(map(str, value.size()))
             print(f'[{shape}, {value.dtype}]', end=', ')
             print(f'Requires grad={value.requires_grad}', end=', ')
             print(f'Grad function={value.grad_fn}', end='')
+
+        if isinstance(value, np.ndarray):
+            shape = ', '.join(map(str, value.shape))
+            print(f'[{shape}, {value.dtype}]', end='')
+
         print('\n', end='')

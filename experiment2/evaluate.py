@@ -82,12 +82,18 @@ with torch.no_grad():
     outputs = functional.softmax(outputs.permute(1, 2, 0), dim=-1).cpu().numpy()
     outputs = outputs[:height, :width]
     outputs = outputs.argmax(axis=-1)
+    debug(outputs=outputs)
+
+_, filename = os.path.split(input_path)
+np.savetxt(os.path.join('cached', f"array_{filename.split('.')[0]}.txt"), outputs, fmt='%d')
+print('矩阵已保存')
 
 mask = np.reshape(np.array(colors, np.uint8)[np.reshape(outputs, [-1])], [height, width, -1])
 mask = Image.fromarray(np.uint8(mask))
 print('Mask: ', 'x'.join(map(str, mask.size)), sep='')
+mask.save(os.path.join('cached', f'mask_{filename}'))
+print('Mask 已保存')
 
-_, filename = os.path.split(input_path)
 combined = Image.blend(image, mask, 0.7)
 combined.save(os.path.join('cached', f'output_{filename}'))
-print('文件已保存')
+print('叠加图已保存')
