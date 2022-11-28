@@ -26,7 +26,7 @@ if not os.path.exists(input_path):
     print(f'无效的输入图像路径: {input_path}')
     exit()
 
-images: List[Tuple[str, Image.Image]] = []
+images: List[Tuple[str, str]] = []
 if os.path.isdir(input_path):
     bar = tqdm(os.listdir(input_path), desc='Prepare Images')
     bar.set_postfix(**{'filename': '?'})
@@ -35,7 +35,7 @@ if os.path.isdir(input_path):
         try:
             _, ext = os.path.splitext(filename)
             assert str(ext).lower() in ['.jpg', '.png'], f'不支持的文件类型: {filename}'
-            images.append((filename, Image.open(os.path.join(input_path, filename))))
+            images.append((filename, os.path.join(input_path, filename)))
         except AssertionError as ex:
             print(str(ex))
 else:
@@ -43,7 +43,7 @@ else:
         _, filename = os.path.split(input_path)
         _, ext = os.path.splitext(input_path)
         assert str(ext).lower() in ['.jpg', '.png'], f'不支持的文件类型: {filename}'
-        images.append((filename, Image.open(input_path)))
+        images.append((filename, input_path))
     except AssertionError as ex:
         print(str(ex))
 if not len(images) > 0:
@@ -101,8 +101,9 @@ net.eval()
 predicts = []
 bar = tqdm(images, desc='Evaluate')
 bar.set_postfix(**{'filename': '?', 'size': '?'})
-for filename, image in bar:
+for filename, path in bar:
     index = filename.split('.')[0]
+    image = Image.open(path)
 
     bar.set_postfix(**{'filename': filename, 'size': 'x'.join(map(str, image.size))})
     inputs = list(fill(image, input_shape))[0]
