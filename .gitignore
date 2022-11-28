@@ -1,6 +1,7 @@
 datasets/
 runs/
 cached/
+*/output
 */cached/
 */__pycache__/
 

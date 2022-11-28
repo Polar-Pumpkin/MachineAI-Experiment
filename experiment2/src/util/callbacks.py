@@ -52,20 +52,7 @@ class Evaluate:
                 outputs = outputs.argmax(axis=-1)
             image = np.uint8(outputs)
             predicts.append(image)
-
-        hist = np.zeros((self.num_classes, self.num_classes))
-        for index in tqdm(range(size), desc='Evaluate mIoU'):
-            predict = predicts[index]
-            truth = truths[index]
-
-            if len(truth.flatten()) != len(predict.flatten()):
-                print('跳过 #{}: {} -> {}'.format(index, len(predict.flatten()), len(truth.flatten())))
-                continue
-            hist += metrics.fast_hist(truth.flatten(), predict.flatten(), self.num_classes)
-
-        ious = metrics.per_class_iu(hist)
-        pa_recall = metrics.per_class_pa_recall(hist)
-        # precision = metrics.per_class_precision(hist)
+        hist, ious, pa_recall, _ = metrics.evaluate(self.num_classes, predicts, truths)
 
         miou = np.nanmean(ious) * 100
         self.x.append(epoch)

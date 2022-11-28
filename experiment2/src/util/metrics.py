@@ -2,6 +2,7 @@ import numpy as np
 
 import torch
 import torch.nn.functional as functional
+from tqdm import tqdm
 
 
 # noinspection DuplicatedCode,PyArgumentList
@@ -46,3 +47,22 @@ def per_class_precision(hist):
 
 def per_accuracy(hist):
     return np.sum(np.diag(hist)) / np.maximum(np.sum(hist), 1)
+
+
+def evaluate(num_classes: int, predicts: list, truths: list):
+    size = min(len(predicts), len(truths))
+    hist = np.zeros((num_classes, num_classes))
+    for index in tqdm(range(size), desc='Evaluate mIoU'):
+        predict = predicts[index]
+        truth = truths[index]
+
+        if len(truth.flatten()) != len(predict.flatten()):
+            print('跳过 #{}: {} -> {}'.format(index, len(predict.flatten()), len(truth.flatten())))
+            continue
+        hist += fast_hist(truth.flatten(), predict.flatten(), num_classes)
+
+    ious = per_class_iu(hist)
+    pa_recall = per_class_pa_recall(hist)
+    precision = per_class_precision(hist)
+    return hist, ious, pa_recall, precision
+
