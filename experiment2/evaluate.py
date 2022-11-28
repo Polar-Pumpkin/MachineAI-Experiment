@@ -125,6 +125,7 @@ for filename, path in bar:
                 frame = outputs[:, :, clazz]
                 frame[frame >= 0.85] = clazz
                 frame[frame < 0.85] = 0
+                frame = frame.astype(np.uint8)
                 mask = np.reshape(colors[frame.flatten()], [height, width, -1])
                 mask = Image.fromarray(np.uint8(mask))
                 mask.save(os.path.join('output', 'masks', index, f'{clazz}_{classes[clazz]}.png'))
