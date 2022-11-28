@@ -15,6 +15,17 @@ from tqdm import tqdm
 from src.net import DeepLabV3Plus
 from src.util.general import fill
 
+
+class AdaptedModule(nn.Module):
+    def __init__(self, module: nn.Module):
+        super(AdaptedModule, self).__init__()
+        self.add_module('module', module)
+        self.module = module
+
+    def forward(self, x):
+        return self.module(x)
+
+
 parser = argparse.ArgumentParser()
 
 parser.add_argument('input', help='输入图像的路径')
@@ -98,7 +109,7 @@ colors = list(colors)
 colors = np.array(colors, np.uint8)
 
 net = DeepLabV3Plus(21, pretrained=False)
-net = nn.DataParallel(net)
+net = AdaptedModule(net)
 missing, unexpected = net.load_state_dict(torch.load(model_path), False)
 if len(missing) > 0:
     with open(os.path.join('output', 'missing_keys.txt'), 'w') as file:
@@ -109,6 +120,8 @@ if len(unexpected) > 0:
     with open(os.path.join('output', 'unexpected_keys.txt'), 'w') as file:
         file.writelines(unexpected)
     print(f'未知 {len(unexpected)} Keys, 已保存至 unexpected_keys.txt')
+else:
+    print(f'已加载模型权重')
 net.eval()
 
 predicts = []
