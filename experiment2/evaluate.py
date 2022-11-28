@@ -128,7 +128,11 @@ for filename, path in bar:
                 frame = frame.astype(np.uint8)
                 mask = np.reshape(colors[frame.flatten()], [height, width, -1])
                 mask = Image.fromarray(np.uint8(mask))
-                mask.save(os.path.join('output', 'masks', index, f'{clazz}_{classes[clazz]}.png'))
+
+                folder = os.path.join('output', 'masks', index)
+                if not os.path.exists(folder):
+                    os.makedirs(folder)
+                mask.save(os.path.join(folder, f'{clazz}_{classes[clazz]}.png'))
             continue
         else:
             outputs = outputs.argmax(axis=-1)
