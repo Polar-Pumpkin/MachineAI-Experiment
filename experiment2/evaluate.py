@@ -89,7 +89,7 @@ for folder in ['images', 'arrays', 'masks']:
 
 input_shape = (512, 512)
 classes = ['background', 'aeroplane', 'bicycle', 'bird', 'boat', 'bottle', 'bus', 'car', 'cat', 'chair', 'cow',
-           'diningtable', 'dog', 'horse', 'motorbike', 'person', 'potted plant', 'sheep', 'sofa', 'train', 'tv/monitor']
+           'diningtable', 'dog', 'horse', 'motorbike', 'person', 'potted plant', 'sheep', 'sofa', 'train', 'tv monitor']
 colors = [(x / 21, 1.0, 1.0) for x in range(21)]
 colors = itertools.starmap(colorsys.hsv_to_rgb, colors)
 colors = map(lambda x: tuple(map(lambda y: int(y * 255), x)), colors)
