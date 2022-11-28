@@ -73,3 +73,21 @@ def debug(**kwargs):
             print(f'[{shape}, {value.dtype}]', end='')
 
         print('\n', end='')
+
+
+def legends(classes: List[str], colors: List[Tuple[int, int, int]]):
+    def bgr(r: int, g: int, b: int) -> Tuple[int, int, int]:
+        return b, g, r
+
+    padding = 10
+    width, height = (60, 20)
+    canvas = np.zeros(((height * 21) + (padding * 2), 240, 3), dtype=np.uint8)
+    for clazz, name in enumerate(classes):
+        x = padding
+        y = clazz * height + padding
+
+        color = colors[clazz]
+        cv2.rectangle(canvas, (x, y), (x + width, y + height), bgr(*color), -1)
+        cv2.rectangle(canvas, (x, y), (x + width, y + height), (0, 0, 0))
+        cv2.putText(canvas, name, (x + width + padding, y + 16), cv2.FONT_HERSHEY_DUPLEX, 0.6, (255, 255, 255))
+    return canvas

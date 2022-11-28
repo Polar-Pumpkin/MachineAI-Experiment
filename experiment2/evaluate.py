@@ -93,10 +93,13 @@ classes = ['background', 'aeroplane', 'bicycle', 'bird', 'boat', 'bottle', 'bus'
 colors = [(x / 21, 1.0, 1.0) for x in range(21)]
 colors = itertools.starmap(colorsys.hsv_to_rgb, colors)
 colors = map(lambda x: tuple(map(lambda y: int(y * 255), x)), colors)
-colors = np.array(list(colors), np.uint8)
+colors = list(colors)
+colors = np.array(colors, np.uint8)
 
 net = DeepLabV3Plus(21, pretrained=False)
-net.load_state_dict(torch.load(model_path), False)
+missing, unexpected = net.load_state_dict(torch.load(model_path), False)
+print(f"缺失 Keys({len(missing)}): {', '.join(missing)}")
+print(f"未知 Keys({len(unexpected)}): {', '.join(unexpected)}")
 net.eval()
 
 predicts = []
