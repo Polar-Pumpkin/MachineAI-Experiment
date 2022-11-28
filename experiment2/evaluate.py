@@ -7,6 +7,7 @@ from typing import List, Tuple
 
 import numpy as np
 import torch
+import torch.nn as nn
 import torch.nn.functional as functional
 from PIL import Image
 from tqdm import tqdm
@@ -97,9 +98,17 @@ colors = list(colors)
 colors = np.array(colors, np.uint8)
 
 net = DeepLabV3Plus(21, pretrained=False)
+net = nn.DataParallel(net)
 missing, unexpected = net.load_state_dict(torch.load(model_path), False)
-print(f"缺失 Keys({len(missing)}): {', '.join(missing)}")
-print(f"未知 Keys({len(unexpected)}): {', '.join(unexpected)}")
+if len(missing) > 0:
+    with open(os.path.join('output', 'missing_keys.txt'), 'w') as file:
+        file.writelines(missing)
+    print(f'缺失 {len(missing)} Keys, 已保存至 missing_keys.txt')
+    exit()
+if len(unexpected) > 0:
+    with open(os.path.join('output', 'unexpected_keys.txt'), 'w') as file:
+        file.writelines(unexpected)
+    print(f'未知 {len(unexpected)} Keys, 已保存至 unexpected_keys.txt')
 net.eval()
 
 predicts = []
