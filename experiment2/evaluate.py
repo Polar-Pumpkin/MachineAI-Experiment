@@ -9,6 +9,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as functional
+from torchsummary import summary
 from PIL import Image
 from tqdm import tqdm
 
@@ -110,6 +111,8 @@ colors[0] = (0, 0, 0)
 colors = np.array(colors, np.uint8)
 
 net = DeepLabV3Plus(21, pretrained=False)
+summary(net, input_shape, device='cuda' if torch.cuda.is_available() else 'cpu')
+
 net = AdaptedModule(net)
 missing, unexpected = net.load_state_dict(torch.load(model_path), False)
 if len(unexpected) > 0:
