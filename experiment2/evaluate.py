@@ -165,5 +165,5 @@ for filename, path in bar:
     mask = Image.fromarray(np.uint8(mask))
     mask.save(os.path.join('output', 'masks', filename))
 
-    combined = Image.blend(image, mask, 0.7)
+    combined = Image.blend(image, mask, 0.5)
     combined.save(os.path.join('output', 'images', filename))
