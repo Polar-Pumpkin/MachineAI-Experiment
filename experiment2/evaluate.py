@@ -111,17 +111,16 @@ colors = np.array(colors, np.uint8)
 net = DeepLabV3Plus(21, pretrained=False)
 net = AdaptedModule(net)
 missing, unexpected = net.load_state_dict(torch.load(model_path), False)
+if len(unexpected) > 0:
+    with open(os.path.join('output', 'unexpected_keys.txt'), 'w') as file:
+        file.writelines(unexpected)
+    print(f'未知 {len(unexpected)} Keys, 已保存至 unexpected_keys.txt')
 if len(missing) > 0:
     with open(os.path.join('output', 'missing_keys.txt'), 'w') as file:
         file.writelines(missing)
     print(f'缺失 {len(missing)} Keys, 已保存至 missing_keys.txt')
     exit()
-if len(unexpected) > 0:
-    with open(os.path.join('output', 'unexpected_keys.txt'), 'w') as file:
-        file.writelines(unexpected)
-    print(f'未知 {len(unexpected)} Keys, 已保存至 unexpected_keys.txt')
-else:
-    print(f'已加载模型权重')
+print(f'已加载模型权重')
 net.eval()
 
 predicts = []
