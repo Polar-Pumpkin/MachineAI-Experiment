@@ -106,6 +106,7 @@ colors = [(x / 21, 1.0, 1.0) for x in range(21)]
 colors = itertools.starmap(colorsys.hsv_to_rgb, colors)
 colors = map(lambda x: tuple(map(lambda y: int(y * 255), x)), colors)
 colors = list(colors)
+colors[0] = (0, 0, 0)
 colors = np.array(colors, np.uint8)
 
 net = DeepLabV3Plus(21, pretrained=False)
