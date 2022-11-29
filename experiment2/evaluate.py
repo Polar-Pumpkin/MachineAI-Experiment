@@ -111,7 +111,7 @@ colors[0] = (0, 0, 0)
 colors = np.array(colors, np.uint8)
 
 net = DeepLabV3Plus(21, pretrained=False)
-summary(net, input_shape, device='cuda' if torch.cuda.is_available() else 'cpu')
+summary(net, (3, input_shape[0], input_shape[1]), device='cuda' if torch.cuda.is_available() else 'cpu')
 
 net = AdaptedModule(net)
 missing, unexpected = net.load_state_dict(torch.load(model_path), False)
