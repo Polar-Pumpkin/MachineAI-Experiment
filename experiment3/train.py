@@ -30,7 +30,8 @@ validate_set = WN18Dataset(dataset_path, 'valid', definitions)
 test_set = WN18Dataset(dataset_path, 'test', definitions)
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-net = TransE(len(definitions.entities), len(definitions.relations), dimension, margin, norm, c, device).to(device=device)
+net = TransE(len(definitions.entities), len(definitions.relations), dimension, margin, norm, c, device)
+net = net.to(device=device)
 optimizer = optim.Adam(net.parameters(), lr=lr)
 
 
