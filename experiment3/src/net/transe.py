@@ -85,6 +85,6 @@ class TransE(nn.Module):
             y = y.to(device=self.device)
         loss = self.loss_func(pos, neg, y)
 
-        entity_scale_loss = losses.scale(entity_embeded)
-        relation_scale_loss = losses.scale(relation_embeded)
+        entity_scale_loss = losses.scale(entity_embeded, device=self.device)
+        relation_scale_loss = losses.scale(relation_embeded, device=self.device)
         return loss + self.c * (entity_scale_loss / len(entity_embeded) + relation_scale_loss / len(relation_embeded))
