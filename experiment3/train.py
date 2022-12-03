@@ -50,9 +50,8 @@ def train(epoches: int = 50, batch_size: int = 100):
 
         net.train()
         for _ in tqdm(range(train_batches), desc='Train'):
-            triple, corrupted_triple = poll(batch_size, train_set, definitions, device)
             optimizer.zero_grad()
-            loss = net(triple, corrupted_triple)
+            loss = net(*poll(batch_size, train_set, definitions, device))
 
             train_loss += loss
             loss.backward()
@@ -60,8 +59,7 @@ def train(epoches: int = 50, batch_size: int = 100):
 
         net.eval()
         for _ in tqdm(range(validate_batches), desc='Validate'):
-            triple, corrupted_triple = poll(batch_size, validate_set, definitions, device)
-            validate_loss += net(triple, corrupted_triple)
+            validate_loss += net(*poll(batch_size, validate_set, definitions, device))
 
         mean_train_loss = train_loss / train_batches
         mean_validate_loss = validate_loss / validate_batches
