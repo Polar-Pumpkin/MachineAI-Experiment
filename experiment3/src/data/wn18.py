@@ -1,8 +1,9 @@
 import os
-from typing import List, Tuple, Dict
-
-from torch.utils.data import Dataset
 import re
+from collections.abc import Sequence
+from typing import List, Tuple, Dict, Iterator
+
+from torch.utils.data import IterableDataset
 
 
 class WN18Definitions:
@@ -42,8 +43,10 @@ class WN18Definitions:
         return self.relations.index(relation)
 
 
-class WN18Dataset(Dataset):
+class WN18Dataset(IterableDataset[Tuple[int, int, int]], Sequence):
+
     def __init__(self, path: str, flag: str, definitions: WN18Definitions):
+        super(WN18Dataset, self).__init__()
         assert os.path.exists(path), f'WN18 数据集路径无效: {path}'
         assert flag in ['train', 'valid', 'test'], f'未知的 WN18 数据集分类: {flag}'
 
@@ -53,6 +56,7 @@ class WN18Dataset(Dataset):
 
         self.definitions: WN18Definitions = definitions
         self.triples: List[Tuple[int, str, int]] = []
+        self.mapped_triples: List[Tuple[int, int, int]] = []
         with open(file_path, 'r') as file:
             for line in file.readlines():
                 h, r, t = line.split('\t')
@@ -63,6 +67,7 @@ class WN18Dataset(Dataset):
                 _h = definitions.get_entity_id(h)
                 _r = definitions.get_relation_id(r)
                 _t = definitions.get_entity_id(t)
+                self.mapped_triples.append((_h, _r, _t))
 
                 self.relation_head: Dict[int, Dict[int, int]] = {}
                 if _r in self.relation_head:
@@ -83,7 +88,7 @@ class WN18Dataset(Dataset):
                 else:
                     self.relation_tail[_r]: Dict[int, int] = {}
                     self.relation_tail[_r][_t] = 1
-        print(f'从 {file_path} 中加载 {len(self)} 条实体定义')
+        print(f'从 {file_path} 中加载 {len(self)} 条三元组定义')
 
         self.relation_tph: Dict[int, float] = {}
         for r in self.relation_head:
@@ -95,12 +100,11 @@ class WN18Dataset(Dataset):
             values = self.relation_tail[r]
             self.relation_hpt[r] = sum(values.values()) / len(values)
 
-    def __getitem__(self, index):
-        h, r, t = self.triples[index]
-        h = self.definitions.get_entity_id(h)
-        r = self.definitions.get_relation_id(r)
-        t = self.definitions.get_entity_id(t)
-        return h, r, t
+    def __getitem__(self, index) -> Tuple[int, int, int]:
+        return self.mapped_triples[index]
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.triples)
+
+    def __iter__(self) -> Iterator[Tuple[int, int, int]]:
+        return self.mapped_triples.__iter__()
