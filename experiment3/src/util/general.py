@@ -1,6 +1,6 @@
 import copy
 import random
-from typing import Union
+from typing import Union, List
 
 import numpy as np
 import torch
@@ -13,6 +13,7 @@ def poll(size: int, dataset: WN18Dataset, definitions: WN18Definitions, device: 
     current = []
     corrupted = []
     for sample in samples:
+        sample = list(sample)
         corrupted_sample = copy.deepcopy(sample)
         h_c, r_c, t_c = corrupted_sample
         pr = np.random.random(1)[0]
