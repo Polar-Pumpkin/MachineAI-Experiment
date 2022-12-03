@@ -61,6 +61,8 @@ class WN18Dataset(IterableDataset[Tuple[int, int, int]], Sequence):
         self.definitions: WN18Definitions = definitions
         self.triples: List[Tuple[int, str, int]] = []
         self.mapped_triples: List[Tuple[int, int, int]] = []
+        self.relation_head: Dict[int, Dict[int, int]] = {}
+        self.relation_tail: Dict[int, Dict[int, int]] = {}
         with open(file_path, 'r') as file:
             for line in file.readlines():
                 h, r, t = line.split('\t')
@@ -73,7 +75,6 @@ class WN18Dataset(IterableDataset[Tuple[int, int, int]], Sequence):
                 _t = definitions.get_entity_id(t)
                 self.mapped_triples.append((_h, _r, _t))
 
-                self.relation_head: Dict[int, Dict[int, int]] = {}
                 if _r in self.relation_head:
                     if _h in self.relation_head[_r]:
                         self.relation_head[_r][_h] += 1
@@ -83,7 +84,6 @@ class WN18Dataset(IterableDataset[Tuple[int, int, int]], Sequence):
                     self.relation_head[_r]: Dict[int, int] = {}
                     self.relation_head[_r][_h] = 1
 
-                self.relation_tail: Dict[int, Dict[int, int]] = {}
                 if _r in self.relation_tail:
                     if _t in self.relation_tail[_r]:
                         self.relation_tail[_r][_t] += 1
