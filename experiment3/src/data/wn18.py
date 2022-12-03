@@ -103,9 +103,7 @@ class WN18Dataset(IterableDataset[Tuple[int, int, int]], Sequence):
             values = self.relation_tail[r]
             self.relation_hpt[r] = sum(values.values()) / len(values)
         now = time.time()
-        print('从 {} 中加载 {} 条三元组定义, {} 平均尾节点数, {} 平均头节点数, 耗时 {}s'.format(
-            file_path, len(self), len(self.relation_tph), len(self.relation_hpt), round(now - timestamp, 3)
-        ))
+        print(f'从 {file_path} 中加载 {len(self)} 条三元组定义, 耗时 {round(now - timestamp, 3)}s')
 
     def __getitem__(self, index) -> Tuple[int, int, int]:
         return self.mapped_triples[index]
