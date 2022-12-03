@@ -2,7 +2,7 @@ import copy
 import os
 import random
 import time
-from typing import List
+from typing import List, Union
 
 import numpy as np
 import torch
@@ -31,7 +31,8 @@ train_set = WN18Dataset(dataset_path, 'train', definitions)
 validate_set = WN18Dataset(dataset_path, 'valid', definitions)
 test_set = WN18Dataset(dataset_path, 'test', definitions)
 
-net = TransE(len(definitions.entities), len(definitions.relations), dimension, margin, norm, c)
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+net = TransE(len(definitions.entities), len(definitions.relations), dimension, margin, norm, c).to(device=device)
 optimizer = optim.Adam(net.parameters(), lr=lr)
 
 
@@ -51,7 +52,7 @@ def train(epoches: int = 50, batch_size: int = 100):
         # Normalise the embedding of the entities to 1
 
         # definitions: WN18Definitions
-        def poll(size: int, dataset: WN18Dataset):
+        def poll(size: int, dataset: WN18Dataset, device: Union[torch.device, None] = None):
             samples = random.sample(list(dataset), size)
             current = []
             corrupted = []
@@ -81,13 +82,17 @@ def train(epoches: int = 50, batch_size: int = 100):
                         corrupted_sample[2] = definitions.get_entity_id(random.sample(definitions.entities, 1)[0])
                 current.append(sample)
                 corrupted.append(corrupted_sample)
-            current = torch.from_numpy(np.array(current)).long()
-            corrupted = torch.from_numpy(np.array(corrupted)).long()
-            return current, corrupted
+            _current: torch.Tensor = torch.from_numpy(np.array(current)).long()
+            _corrupted: torch.Tensor = torch.from_numpy(np.array(corrupted)).long()
+
+            if device is not None:
+                _current = _current.to(device)
+                _corrupted = _corrupted.to(device)
+            return _current, _corrupted
 
         net.train()
         for _ in tqdm(range(train_batches), desc='Train'):
-            triple, corrupted_triple = poll(batch_size, train_set)
+            triple, corrupted_triple = poll(batch_size, train_set, device)
             optimizer.zero_grad()
             loss = net(triple, corrupted_triple)
 
@@ -97,7 +102,7 @@ def train(epoches: int = 50, batch_size: int = 100):
 
         net.eval()
         for _ in tqdm(range(validate_batches), desc='Validate'):
-            triple, corrupted_triple = poll(batch_size, validate_set)
+            triple, corrupted_triple = poll(batch_size, validate_set, device)
             validate_loss += net(triple, corrupted_triple)
 
         mean_train_loss = train_loss / train_batches
