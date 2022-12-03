@@ -7,7 +7,9 @@ from ..util import losses
 
 
 class TransE(nn.Module):
-    def __init__(self, num_entities: int, num_relations: int, dimension: int, margin: float, norm: int, c: float):
+    def __init__(self, num_entities: int, num_relations: int, dimension: int,
+                 margin: float, norm: int, c: float,
+                 device: torch.device = None):
         super(TransE, self).__init__()
         self.num_entities = num_entities
         self.num_relations = num_relations
@@ -15,16 +17,21 @@ class TransE(nn.Module):
         self.margin = margin
         self.norm = norm
         self.c = c
+        self.device = device
 
         self.entity_embedding = nn.Embedding(num_embeddings=num_entities, embedding_dim=dimension)
         self.relation_embedding = nn.Embedding(num_embeddings=num_relations, embedding_dim=dimension)
         self.loss_func = nn.MarginRankingLoss(margin, reduction='mean')
 
-        self.__normalize_embedding(self.entity_embedding)
-        self.__normalize_embedding(self.relation_embedding)
+        self.__normalize(self.entity_embedding)
+        self.__normalize(self.relation_embedding)
+        if device is not None:
+            self.entity_embedding = self.entity_embedding.to(device=device)
+            self.relation_embedding = self.relation_embedding.to(device=device)
+            self.loss_func = self.loss_func.to(device=device)
 
     @staticmethod
-    def __normalize_embedding(embedding: nn.Embedding):
+    def __normalize(embedding: nn.Embedding):
         # embedding.weight (Tensor) - 形状为 (num_embeddings, embedding_dim) 的嵌入中可学习的权值
         nn.init.xavier_uniform_(embedding.weight.data)
         norm = embedding.weight.detach().cpu().numpy()
@@ -48,6 +55,9 @@ class TransE(nn.Module):
         score = torch.norm(distance, p=self.norm, dim=1)
         if test:
             score = score.detach().cpu().numpy()
+
+        if self.device is not None:
+            score = score.to(device=self.device)
         return score
 
     def forward(self, triple, corrupted_triple):
@@ -60,6 +70,8 @@ class TransE(nn.Module):
         h_c = torch.squeeze(h_c, dim=1)
         r_c = torch.squeeze(r_c, dim=1)
         t_c = torch.squeeze(t_c, dim=1)
+        if self.device is not None:
+            h, r, t, h_c, r_c, t_c = map(lambda x: x.to(device=self.device), [h, r, t, h_c, r_c, t_c])
 
         # torch.nn.Embedding 类的 forward 只接受 LongTensor 类型的张量
         pos = self.distance(h, r, t)
