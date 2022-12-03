@@ -1,5 +1,6 @@
 import os
 import re
+import time
 from collections.abc import Sequence
 from typing import List, Tuple, Dict, Iterator
 
@@ -20,6 +21,7 @@ class WN18Definitions:
         self.load(path)
 
     def load(self, path: str):
+        timestamp = time.time()
         regex = r"^__(?P<word>.+?)_(?P<POS>[A-Z]{2})_(?P<index>\d+)$"
         with open(path, 'r') as file:
             for line in file.readlines():
@@ -31,7 +33,8 @@ class WN18Definitions:
                 entityId = int(entityId)
                 self.entities.append(entityId)
                 self.definitions[entityId] = (entityId, word, pos, int(index), description)
-        print(f'从 {path} 中加载 {len(self)} 条实体定义')
+        now = time.time()
+        print(f'从 {path} 中加载 {len(self)} 条实体定义, 耗时 {round(now - timestamp, 3)}s')
 
     def __len__(self) -> int:
         return len(self.definitions)
@@ -54,6 +57,7 @@ class WN18Dataset(IterableDataset[Tuple[int, int, int]], Sequence):
         file_path = os.path.join(path, filename)
         assert os.path.exists(file_path), f'未找到 WN18 数据集分类文件: {file_path}'
 
+        timestamp = time.time()
         self.definitions: WN18Definitions = definitions
         self.triples: List[Tuple[int, str, int]] = []
         self.mapped_triples: List[Tuple[int, int, int]] = []
@@ -88,7 +92,6 @@ class WN18Dataset(IterableDataset[Tuple[int, int, int]], Sequence):
                 else:
                     self.relation_tail[_r]: Dict[int, int] = {}
                     self.relation_tail[_r][_t] = 1
-        print(f'从 {file_path} 中加载 {len(self)} 条三元组定义')
 
         self.relation_tph: Dict[int, float] = {}
         for r in self.relation_head:
@@ -99,6 +102,10 @@ class WN18Dataset(IterableDataset[Tuple[int, int, int]], Sequence):
         for r in self.relation_tail:
             values = self.relation_tail[r]
             self.relation_hpt[r] = sum(values.values()) / len(values)
+        now = time.time()
+        print('从 {} 中加载 {} 条三元组定义, {} 平均尾节点数, {} 平均头节点数, 耗时 {}s'.format(
+            file_path, len(self), len(self.relation_tph), len(self.relation_hpt), round(now - timestamp, 3)
+        ))
 
     def __getitem__(self, index) -> Tuple[int, int, int]:
         return self.mapped_triples[index]
