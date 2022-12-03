@@ -81,6 +81,8 @@ class TransE(nn.Module):
         relation_embeded = self.relation_embedding(torch.cat([r, r_c]))
 
         y = Variable(torch.Tensor([-1]))
+        if self.device is not None:
+            y = y.to(device=self.device)
         loss = self.loss_func(pos, neg, y)
 
         entity_scale_loss = losses.scale(entity_embeded)
