@@ -83,6 +83,7 @@ def train(epoches: int = 50, batch_size: int = 100):
         print(f'{round(now - timestamp, 3)}s elpased')
         train_losses.append(mean_train_loss)
         validate_losses.append(mean_validate_loss)
+    print(type(train_losses))
 
     # visualize the loss as the network trained
     figure = plt.figure(figsize=(6, 4))
@@ -105,4 +106,4 @@ def train(epoches: int = 50, batch_size: int = 100):
 
 
 if __name__ == '__main__':
-    train()
+    train(1)
