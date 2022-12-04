@@ -114,4 +114,4 @@ def train(epoches: int = 50, batch_size: int = 100):
 
 
 if __name__ == '__main__':
-    train(1)
+    train()
