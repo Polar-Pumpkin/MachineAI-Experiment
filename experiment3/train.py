@@ -1,5 +1,6 @@
 import os
 import time
+from datetime import datetime, timedelta
 from typing import List
 
 import torch
@@ -9,7 +10,7 @@ from tqdm import tqdm
 
 from src.data.wn18 import WN18Definitions, WN18Dataset
 from src.net import TransE
-from src.util.general import poll
+from src.util.general import poll, duration
 
 dimension = 50
 margin = 1.0
@@ -42,9 +43,9 @@ def train(epoches: int = 50, batch_size: int = 100):
 
     train_losses: List[float] = []
     validate_losses: List[float] = []
-    for epoch in range(epoches):
+    for epoch in range(1, epoches + 1):
         print(f'===== Epoch {epoch}/{epoches}')
-        timestamp = time.time()
+        timestamp = datetime.now()
         train_loss = 0.0
         validate_loss = 0.0
         # Normalise the embedding of the entities to 1
@@ -64,7 +65,11 @@ def train(epoches: int = 50, batch_size: int = 100):
 
         mean_train_loss = train_loss / train_batches
         mean_validate_loss = validate_loss / validate_batches
-        print(f'Losses: {mean_train_loss}/{mean_validate_loss}')
+        train_losses.append(mean_train_loss)
+        validate_losses.append(mean_validate_loss)
+        print('Losses: {}/{}'.format(
+            round(mean_train_loss, 3), round(mean_validate_loss, 3)
+        ))
 
         if epoch % 5 == 0 or epoch == epoches:
             filename = 'Epoch({})-{:.3f}-{:.3f}.pth'.format(epoch, mean_train_loss, mean_validate_loss)
@@ -79,10 +84,13 @@ def train(epoches: int = 50, batch_size: int = 100):
         filename = 'latest.pth'
         torch.save(net.state_dict(), os.path.join(output_path, filename))
 
-        now = time.time()
-        print(f'{round(now - timestamp, 3)}s elpased')
-        train_losses.append(mean_train_loss)
-        validate_losses.append(mean_validate_loss)
+        now = datetime.now()
+        elpased = (now - timestamp).seconds
+        timeleft = (epoches - epoch) * elpased
+        scheduled = now + timedelta(seconds=timeleft)
+        print('本轮耗时 {}, 预计 {} 后结束 ({})'.format(
+            duration(elpased), duration(timeleft), scheduled.strftime('%Y-%m-%d %H:%M:%S')
+        ))
     print(type(train_losses))
 
     # visualize the loss as the network trained
