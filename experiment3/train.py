@@ -58,6 +58,7 @@ def train(epoches: int = 50, batch_size: int = 100):
             train_loss += loss
             loss.backward()
             optimizer.step()
+        print(type(loss), loss.size())
 
         net.eval()
         for _ in tqdm(range(validate_batches), desc='Validate'):
