@@ -58,7 +58,7 @@ def train(epoches: int = 50, batch_size: int = 100):
             train_loss += loss
             loss.backward()
             optimizer.step()
-        print(type(loss), loss.size())
+        print(type(loss), loss)
 
         net.eval()
         for _ in tqdm(range(validate_batches), desc='Validate'):
@@ -68,11 +68,11 @@ def train(epoches: int = 50, batch_size: int = 100):
         mean_validate_loss = validate_loss / validate_batches
         train_losses.append(mean_train_loss)
         validate_losses.append(mean_validate_loss)
-        print(type(train_loss), train_loss.size())
-        print(type(mean_train_loss), mean_train_loss.size())
+        print(type(train_loss), train_loss)
+        print(type(mean_train_loss), mean_train_loss)
         print(type(train_losses))
         if len(train_losses) > 0:
-            print(type(train_losses[0]), train_losses[0].size())
+            print(type(train_losses[0]), train_losses[0])
         print('Losses: {}/{}'.format(
             round(mean_train_loss, 3), round(mean_validate_loss, 3)
         ))
