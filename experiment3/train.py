@@ -55,7 +55,7 @@ def train(epoches: int = 50, batch_size: int = 100):
             optimizer.zero_grad()
             loss = net(*poll(batch_size, train_set, definitions, device))
 
-            train_loss += loss
+            train_loss += loss.item()
             loss.backward()
             optimizer.step()
         print(type(loss), loss)
