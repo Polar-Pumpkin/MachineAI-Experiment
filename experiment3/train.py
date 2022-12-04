@@ -98,7 +98,7 @@ def train(epoches: int = 50, batch_size: int = 100):
     plt.plot(range(1, len(train_losses) + 1), train_losses, label='Train losses')
     plt.plot(range(1, len(validate_losses) + 1), validate_losses, label='Validate losses')
 
-    plt.xlabel('Epoches')
+    plt.xlabel('Epoch')
     plt.ylabel('Loss')
     plt.xlim(0, len(train_losses) + 1)  # consistent scale
     plt.grid(True)
