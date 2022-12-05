@@ -14,8 +14,6 @@ from src.util.general import poll, duration
 
 dimension = 50
 margin = 1.0
-norm = 1
-c = 1.0
 lr = 0.01
 
 output_root = os.path.join('.', 'runs')
@@ -31,7 +29,7 @@ validate_set = WN18Dataset(dataset_path, 'valid', definitions)
 test_set = WN18Dataset(dataset_path, 'test', definitions)
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-net = TransE(len(definitions.entities), len(definitions.relations), dimension, margin, norm, c, device)
+net = TransE(len(definitions.entities), len(definitions.relations), dimension, margin, device)
 net = net.to(device=device)
 optimizer = optim.Adam(net.parameters(), lr=lr)
 
