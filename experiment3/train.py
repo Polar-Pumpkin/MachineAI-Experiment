@@ -1,4 +1,5 @@
 import os
+import shutil
 import time
 from datetime import datetime, timedelta
 from typing import List
@@ -89,7 +90,6 @@ def train(epoches: int = 50, batch_size: int = 100):
         print('本轮耗时 {}, 预计 {} 后结束 ({})'.format(
             duration(elpased), duration(timeleft), scheduled.strftime('%Y-%m-%d %H:%M:%S')
         ))
-    print(type(train_losses))
 
     # visualize the loss as the network trained
     figure = plt.figure(figsize=(6, 4))
@@ -112,4 +112,8 @@ def train(epoches: int = 50, batch_size: int = 100):
 
 
 if __name__ == '__main__':
-    train()
+    try:
+        train()
+    except KeyboardInterrupt:
+        shutil.rmtree(output_path)
+        print('手动中断训练, 已删除输出文件夹')
