@@ -47,7 +47,7 @@ class WN18Definitions:
         return self.relations.index(relation)
 
     def get_entity_from_word(self, word: str) -> int:
-        for entityId, ref, _, _, _ in self.definitions:
+        for entityId, ref, _, _, _ in self.definitions.values():
             if word == ref:
                 return entityId
         return -1

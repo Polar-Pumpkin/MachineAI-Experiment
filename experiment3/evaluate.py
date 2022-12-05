@@ -57,7 +57,7 @@ if mode == 0:
             print('未知的关系')
             exit()
 
-    for target_id, ref, pos, _, description in definitions.definitions:
+    for target_id, ref, pos, _, description in definitions.definitions.values():
         score = net.score(
             (
                 definitions.get_entity_id(entity_id),
