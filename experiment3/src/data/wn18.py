@@ -8,6 +8,8 @@ from torch.utils.data import IterableDataset
 
 
 class WN18Definitions:
+    _regex = re.compile(r"^__(?P<word>.+?)_(?P<POS>[A-Z]{2})_(?P<index>\d+)$")
+
     def __init__(self, path: str):
         self.path: str = path
         self.entities: List[int] = []
@@ -22,11 +24,10 @@ class WN18Definitions:
 
     def load(self, path: str):
         timestamp = time.time()
-        regex = r"^__(?P<word>.+?)_(?P<POS>[A-Z]{2})_(?P<index>\d+)$"
         with open(path, 'r') as file:
             for line in file.readlines():
                 entityId, definition, description = line.split('\t')
-                matches = re.search(regex, definition)
+                matches = self._regex.search(definition)
                 assert matches, f'无法解析的实体定义: {definition}'
                 word, pos, index = map(lambda x: matches.group(x), ['word', 'POS', 'index'])
 
@@ -44,6 +45,12 @@ class WN18Definitions:
 
     def get_relation_id(self, relation: str) -> int:
         return self.relations.index(relation)
+
+    def get_entity_from_word(self, word: str) -> int:
+        for entityId, ref, _, _, _ in self.definitions:
+            if word == ref:
+                return entityId
+        return -1
 
 
 class WN18Dataset(IterableDataset[Tuple[int, int, int]], Sequence):
