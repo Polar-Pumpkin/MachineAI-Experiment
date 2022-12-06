@@ -57,7 +57,7 @@ if mode == 0:
         if relation not in definitions.relations:
             print('未知的关系')
             exit()
-
+    count = 0
     for target_id, ref, pos, _, description in definitions.definitions.values():
         score = net.score(torch.from_numpy(np.array([(
             definitions.get_entity_id(entity_id),
@@ -65,6 +65,9 @@ if mode == 0:
             definitions.get_entity_id(target_id)
         )])).long()).item()
         print(f'{ref} -> {score}')
+        count += 1
+        if count >= 10:
+            exit()
     # TODO
 elif mode == 1:
     other = input('请输入单词: ')
@@ -73,6 +76,7 @@ elif mode == 1:
         print('未查询到此单词')
         exit()
 
+    count = 0
     for relation in definitions.relations:
         score = net.score(torch.from_numpy(np.array([(
             definitions.get_entity_id(entity_id),
@@ -80,6 +84,9 @@ elif mode == 1:
             definitions.get_entity_id(other_id)
         )])).long()).item()
         print(f'{relation} -> {score}')
+        count += 1
+        if count >= 10:
+            exit()
     # TODO
 else:
     print(f'未知的查询模式: {mode}')
