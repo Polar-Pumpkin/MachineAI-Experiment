@@ -1,6 +1,7 @@
 import argparse
 import os
 
+import numpy as np
 import torch
 
 from src.data.wn18 import WN18Definitions
@@ -58,13 +59,11 @@ if mode == 0:
             exit()
 
     for target_id, ref, pos, _, description in definitions.definitions.values():
-        score = net.score(
-            (
-                definitions.get_entity_id(entity_id),
-                definitions.get_relation_id(relation),
-                definitions.get_entity_id(target_id)
-            )
-        ).item()
+        score = net.score(torch.from_numpy(np.array([(
+            definitions.get_entity_id(entity_id),
+            definitions.get_relation_id(relation),
+            definitions.get_entity_id(target_id)
+        )])).long()).item()
         print(f'{ref} -> {score}')
     # TODO
 elif mode == 1:
@@ -75,13 +74,11 @@ elif mode == 1:
         exit()
 
     for relation in definitions.relations:
-        score = net.score(
-            (
-                definitions.get_entity_id(entity_id),
-                definitions.get_relation_id(relation),
-                definitions.get_entity_id(other_id)
-            )
-        ).item()
+        score = net.score(torch.from_numpy(np.array([(
+            definitions.get_entity_id(entity_id),
+            definitions.get_relation_id(relation),
+            definitions.get_entity_id(other_id)
+        )])).long()).item()
         print(f'{relation} -> {score}')
     # TODO
 else:
