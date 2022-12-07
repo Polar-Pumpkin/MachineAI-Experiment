@@ -96,7 +96,7 @@ elif mode == 1:
     scores = []
     for relation in definitions.relations:
         scores.append(net.score(definitions.map(entity_id, relation, other_id)).item())
-    definitions.print(definitions.entities[np.argmax(scores)])
-    definitions.print(definitions.entities[np.argmin(scores)])
+    print(definitions.relations[np.argmax(scores)])
+    print(definitions.relations[np.argmin(scores)])
 else:
     print(f'未知的查询模式: {mode}')
