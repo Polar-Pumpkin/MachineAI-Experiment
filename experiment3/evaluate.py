@@ -1,6 +1,7 @@
 import argparse
 import os
 
+import numpy as np
 import torch
 
 from src.data.wn18 import WN18Definitions
@@ -81,25 +82,17 @@ if mode == 0:
             print('未知的关系')
             exit()
 
-    count = 0
-    for target_id, ref, pos, _, description in definitions.definitions.values():
-        score = net.score(definitions.map(entity_id, relation, target_id)).item()
-        print(f'{ref} -> {score}')
-        count += 1
-        if count >= 30:
-            exit()
-    # TODO
+    scores = []
+    for target_id in definitions.definitions:
+        scores.append(net.score(definitions.map(entity_id, relation, target_id)).item())
+    definitions.print(definitions.entities[np.argmax(scores)])
 elif mode == 1:
     other = input('请输入单词: ')
     other_id = select(other)
 
-    count = 0
+    scores = []
     for relation in definitions.relations:
-        score = net.score(definitions.map(entity_id, relation, other_id)).item()
-        print(f'{relation} -> {score}')
-        count += 1
-        if count >= 30:
-            exit()
-    # TODO
+        scores.append(net.score(definitions.map(entity_id, relation, other_id)).item())
+    definitions.print(definitions.entities[np.argmax(scores)])
 else:
     print(f'未知的查询模式: {mode}')
