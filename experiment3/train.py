@@ -11,7 +11,8 @@ from tqdm import tqdm
 
 from src.data.wn18 import WN18Definitions, WN18Dataset
 from src.net import TransE
-from src.util.general import poll, duration
+from src.util.general import duration
+from src.util.train import poll
 
 dimension = 50
 margin = 1.0
