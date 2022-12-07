@@ -1,9 +1,10 @@
-from typing import Union
+from typing import Union, Tuple
 
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as functional
+from torch import LongTensor
 
 
 class TransE(nn.Module):
@@ -36,7 +37,9 @@ class TransE(nn.Module):
         norm = norm / np.sqrt(np.sum(np.square(norm), axis=1, keepdims=True))
         embedding.weight.data.copy_(torch.from_numpy(norm))
 
-    def score(self, triple, device: Union[torch.device, None] = None):
+    def score(self, triple: Union[LongTensor, Tuple[int, int, int]], device: Union[torch.device, None] = None):
+        if isinstance(triple, tuple):
+            triple = torch.from_numpy(np.array([triple])).long()
         h, r, t = torch.chunk(triple, 3, 1)
         if device is not None:
             h, r, t = map(lambda x: x.to(device=device), [h, r, t])

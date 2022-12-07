@@ -1,11 +1,25 @@
 import copy
 import random
+from enum import Enum
 from typing import Union
 
 import numpy as np
 import torch
 
 from ..data.wn18 import WN18Dataset, WN18Definitions
+
+
+class Colors:
+    PURPLE = '\033[95m'
+    CYAN = '\033[96m'
+    DARKCYAN = '\033[36m'
+    BLUE = '\033[94m'
+    GREEN = '\033[92m'
+    YELLOW = '\033[93m'
+    RED = '\033[91m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+    END = '\033[0m'
 
 
 def duration(seconds: int) -> str:
@@ -51,14 +65,14 @@ def poll(size: int, dataset: WN18Dataset, definitions: WN18Definitions, device: 
         # 如果替换头实体, 获得正假三元组的概率为 8/9 而替换尾实体获得正假三元组的概率只有 5/9
         if pr < p:
             # Change the head entity
-            corrupted_sample[0] = definitions.get_entity_id(random.sample(definitions.entities, 1)[0])
+            corrupted_sample[0] = definitions.get_entity_index(random.sample(definitions.entities, 1)[0])
             while corrupted_sample[0] == sample[0]:
-                corrupted_sample[0] = definitions.get_entity_id(random.sample(definitions.entities, 1)[0])
+                corrupted_sample[0] = definitions.get_entity_index(random.sample(definitions.entities, 1)[0])
         else:
             # Change the tail entity
-            corrupted_sample[2] = definitions.get_entity_id(random.sample(definitions.entities, 1)[0])
+            corrupted_sample[2] = definitions.get_entity_index(random.sample(definitions.entities, 1)[0])
             while corrupted_sample[2] == sample[2]:
-                corrupted_sample[2] = definitions.get_entity_id(random.sample(definitions.entities, 1)[0])
+                corrupted_sample[2] = definitions.get_entity_index(random.sample(definitions.entities, 1)[0])
         current.append(sample)
         corrupted.append(corrupted_sample)
     _current: torch.Tensor = torch.from_numpy(np.array(current)).long()

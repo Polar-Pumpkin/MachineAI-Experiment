@@ -6,6 +6,8 @@ from typing import List, Tuple, Dict, Iterator
 
 from torch.utils.data import IterableDataset
 
+from ..util.general import Colors
+
 
 class WN18Definitions:
     _regex = re.compile(r"^__(?P<word>.+?)_(?P<POS>[A-Z]{2})_(?P<index>\d+)$")
@@ -26,31 +28,43 @@ class WN18Definitions:
         timestamp = time.time()
         with open(path, 'r') as file:
             for line in file.readlines():
-                entityId, definition, description = line.split('\t')
+                entity_id, definition, description = line.split('\t')
                 matches = self._regex.search(definition)
                 assert matches, f'无法解析的实体定义: {definition}'
                 word, pos, index = map(lambda x: matches.group(x), ['word', 'POS', 'index'])
 
-                entityId = int(entityId)
-                self.entities.append(entityId)
-                self.definitions[entityId] = (entityId, word, pos, int(index), description)
+                entity_id = int(entity_id)
+                self.entities.append(entity_id)
+                self.definitions[entity_id] = (entity_id, word, pos, int(index), description)
         now = time.time()
         print(f'从 {path} 中加载 {len(self)} 条实体定义, 耗时 {round(now - timestamp, 3)}s')
 
     def __len__(self) -> int:
         return len(self.definitions)
 
-    def get_entity_id(self, entity: int) -> int:
+    def __getitem__(self, item: int) -> Tuple[int, str, str, int, str]:
+        return self.definitions[item]
+
+    def get_entity_index(self, entity: int) -> int:
         return self.entities.index(entity)
 
-    def get_relation_id(self, relation: str) -> int:
+    def get_relation_index(self, relation: str) -> int:
         return self.relations.index(relation)
 
-    def get_entity_from_word(self, word: str) -> int:
-        for entityId, ref, _, _, _ in self.definitions.values():
+    def get_entity_id_from_word(self, word: str) -> List[int]:
+        references = []
+        for entity_id, ref, _, _, _ in self.definitions.values():
             if word == ref:
-                return entityId
-        return -1
+                references.append(entity_id)
+        return references
+
+    def map(self, h: int, r: str, t: int) -> Tuple[int, int, int]:
+        return self.get_entity_index(h), self.get_relation_index(r), self.get_entity_index(t)
+
+    def print(self, entity_id: int):
+        _, name, pos, index, description = self[entity_id]
+        print(f'{Colors.BOLD}{name}{Colors.END}, {pos} (#{index})')
+        print(description)
 
 
 class WN18Dataset(IterableDataset[Tuple[int, int, int]], Sequence):
@@ -77,9 +91,9 @@ class WN18Dataset(IterableDataset[Tuple[int, int, int]], Sequence):
                 t = int(t)
                 self.triples.append((h, r, t))
 
-                _h = definitions.get_entity_id(h)
-                _r = definitions.get_relation_id(r)
-                _t = definitions.get_entity_id(t)
+                _h = definitions.get_entity_index(h)
+                _r = definitions.get_relation_index(r)
+                _t = definitions.get_entity_index(t)
                 self.mapped_triples.append((_h, _r, _t))
 
                 if _r in self.relation_head:
