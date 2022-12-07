@@ -1,5 +1,6 @@
 import argparse
 import os
+from typing import Union, Tuple
 
 import numpy as np
 import torch
@@ -68,6 +69,7 @@ if not mode.isdigit():
     exit()
 mode = int(mode)
 
+result: Union[Tuple[int, float], None] = None
 if mode == 0:
     relation = input('请输入关系: ')
     if relation.isdigit():
@@ -86,6 +88,7 @@ if mode == 0:
     for target_id in definitions.definitions:
         scores.append(net.score(definitions.map(entity_id, relation, target_id)).item())
     definitions.print(definitions.entities[np.argmax(scores)])
+    definitions.print(definitions.entities[np.argmin(scores)])
 elif mode == 1:
     other = input('请输入单词: ')
     other_id = select(other)
@@ -94,5 +97,6 @@ elif mode == 1:
     for relation in definitions.relations:
         scores.append(net.score(definitions.map(entity_id, relation, other_id)).item())
     definitions.print(definitions.entities[np.argmax(scores)])
+    definitions.print(definitions.entities[np.argmin(scores)])
 else:
     print(f'未知的查询模式: {mode}')
